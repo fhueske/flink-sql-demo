@@ -1,0 +1,65 @@
+version: '2.1'
+services:
+  sql-client:
+    image: fhueske/flink-sql-training:1-FLINK-1.10-scala_2.11
+    command: "java -classpath /opt/data/data-producer.jar com.ververica.sql_training.data_producer.TaxiRecordProducer --input file /opt/data --output kafka kafka:9092 --speedup 10.0"
+    depends_on:
+      - kafka
+      - jobmanager
+      - mysql
+    environment:
+      FLINK_JOBMANAGER_HOST: jobmanager
+      ZOOKEEPER_CONNECT: zookeeper
+      KAFKA_BOOTSTRAP: kafka
+      MYSQL_HOST: mysql
+  jobmanager:
+    image: flink:1.10.0-scala_2.11
+    hostname: "jobmanager"
+    expose:
+      - "6123"
+    ports:
+      - "8081:8081"
+    command: jobmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+  taskmanager:
+    image: flink:1.10.0-scala_2.11
+    expose:
+      - "6121"
+      - "6122"
+    depends_on:
+      - jobmanager
+    command: taskmanager
+    links:
+      - jobmanager:jobmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+  zookeeper:
+    image: wurstmeister/zookeeper:3.4.6
+    ports:
+      - "2181:2181"
+  kafka:
+    image: wurstmeister/kafka:2.12-2.2.1
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: "kafka"
+      KAFKA_ADVERTISED_PORT: "9092"
+      HOSTNAME_COMMAND: "route -n | awk '/UG[ \t]/{print $$2}'"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "Rides:1:1, Fares:1:1, DriverChanges:1:1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  mysql:
+    image: mysql:8.0.19
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_USER: "flink"
+      MYSQL_PASSWORD: "secret"
+      MYSQL_DATABASE: "flinksql"
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    volumes:
+      - ./mysql:/docker-entrypoint-initdb.d
+
