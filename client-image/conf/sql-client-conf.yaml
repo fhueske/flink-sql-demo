@@ -25,6 +25,13 @@
 
 # Define table sources here. See the Table API & SQL documentation for details.
 
+catalogs:
+   - name: hcat
+     type: hive
+     property-version: 1
+     hive-version: 2.3.6
+     hive-conf-dir: /opt/hive-conf
+
 tables:
   - name: Rides
     type: source
@@ -148,19 +155,19 @@ tables:
     primary-key: taxiId
     time-attribute: usageStartTime
 
-functions:
-- name: timeDiff
-  from: class
-  class: com.ververica.sql_training.udfs.TimeDiff
-- name: isInNYC
-  from: class
-  class: com.ververica.sql_training.udfs.IsInNYC
-- name: toAreaId
-  from: class
-  class: com.ververica.sql_training.udfs.ToAreaId
-- name: toCoords
-  from: class
-  class: com.ververica.sql_training.udfs.ToCoords
+# functions:
+# - name: timeDiff
+#   from: class
+#   class: com.ververica.sql_training.udfs.TimeDiff
+# - name: isInNYC
+#   from: class
+#   class: com.ververica.sql_training.udfs.IsInNYC
+# - name: toAreaId
+#   from: class
+#   class: com.ververica.sql_training.udfs.ToAreaId
+# - name: toCoords
+#   from: class
+#   class: com.ververica.sql_training.udfs.ToCoords
 
 #==============================================================================
 # Execution properties

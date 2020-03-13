@@ -1,17 +1,24 @@
 version: '2.1'
 services:
   sql-client:
-    image: fhueske/flink-sql-training:1-FLINK-1.10-scala_2.11
-    command: "java -classpath /opt/data/data-producer.jar com.ververica.sql_training.data_producer.TaxiRecordProducer --input file /opt/data --output kafka kafka:9092 --speedup 10.0"
+    image: fhueske/flink-sql-demo-client:1-FLINK-1.10-scala_2.11
+    build: ./client-image
     depends_on:
       - kafka
       - jobmanager
+      - taskmanager
       - mysql
+      - metastore
+      - minio
     environment:
       FLINK_JOBMANAGER_HOST: jobmanager
       ZOOKEEPER_CONNECT: zookeeper
       KAFKA_BOOTSTRAP: kafka
       MYSQL_HOST: mysql
+  data-provider:
+    image: fhueske/flink-sql-demo-data:1
+    build: ./data-image
+    command: "java -classpath /opt/data/data-producer.jar com.ververica.sql_training.data_producer.TaxiRecordProducer --input file /opt/data --output kafka kafka:9092 --speedup 10.0"
   jobmanager:
     image: flink:1.10.0-scala_2.11
     hostname: "jobmanager"
@@ -34,6 +41,21 @@ services:
       - jobmanager:jobmanager
     environment:
       - JOB_MANAGER_RPC_ADDRESS=jobmanager
+  metastore:
+    image: fhueske/hive-metastore:2.3.6
+    build: ./metastore-image
+    expose:
+      - "9083"
+  minio:
+    image: minio/minio:latest
+    command: server /data
+    environment:
+      - MINIO_ACCESS_KEY=sql-demo
+      - MINIO_SECRET_KEY=demo-sql
+    expose:
+      - "9000"
+    ports:
+      - "9000:9000"
   zookeeper:
     image: wurstmeister/zookeeper:3.4.6
     ports:

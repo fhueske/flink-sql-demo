@@ -23,13 +23,8 @@
 FROM maven:3.6-jdk-8-slim AS builder
 
 # Get UDF code and compile it
-COPY ./java/sql-training-udfs /opt/sql-udfs
+COPY ./java/sql-demo-udfs /opt/sql-udfs
 RUN cd /opt/sql-udfs; \
-    mvn clean install
-
-# Get data producer code and compile it
-COPY ./java/sql-training-data-producer /opt/data-producer
-RUN cd /opt/data-producer; \
     mvn clean install
 
 ###############################################################################
@@ -44,26 +39,26 @@ ADD VERSION .
 COPY sql-client/ /opt/sql-client
 
 # Copy playground UDFs
-COPY --from=builder /opt/sql-udfs/target/sql-training-udfs-*.jar /opt/sql-client/lib/
-
-# Copy data producer
-COPY --from=builder /opt/data-producer/target/sql-training-data-producer-*.jar /opt/data/data-producer.jar
+COPY --from=builder /opt/sql-udfs/target/sql-demo-udfs-*.jar /opt/sql-client/lib/
 
 # Download connector libraries
 RUN wget -P /opt/sql-client/lib/ https://repo.maven.apache.org/maven2/org/apache/flink/flink-json/${FLINK_VERSION}/flink-json-${FLINK_VERSION}.jar; \
     wget -P /opt/sql-client/lib/ https://repo.maven.apache.org/maven2/org/apache/flink/flink-sql-connector-kafka_2.11/${FLINK_VERSION}/flink-sql-connector-kafka_2.11-${FLINK_VERSION}.jar; \
     wget -P /opt/sql-client/lib/ https://repo.maven.apache.org/maven2/org/apache/flink/flink-jdbc_2.11/1.10.0/flink-jdbc_2.11-1.10.0.jar; \
-    wget -P /opt/sql-client/lib/ https://repo.maven.apache.org/maven2/mysql/mysql-connector-java/8.0.19/mysql-connector-java-8.0.19.jar; \
-# Create data folders
-    mkdir -p /opt/data; \
-    mkdir -p /opt/data/stream; \
-# Download data files
-    wget -O /opt/data/driverChanges.txt.gz 'https://drive.google.com/uc?export=download&id=1pf4tfv-YpoVQ9_O0948M8oXeCfVH-0MH'; \
-    wget -O /opt/data/fares.txt.gz 'https://drive.google.com/uc?export=download&id=1SriiwcIdMvY7uJsWSY4Hhh32iO3F4ND2'; \
-    wget -O /opt/data/rides.txt.gz 'https://drive.google.com/uc?export=download&id=1gY8W07OFvB7_4lHlAyingM4WQzs0_8lT';
+    wget -P /opt/sql-client/lib/ https://repo.maven.apache.org/maven2/mysql/mysql-connector-java/8.0.19/mysql-connector-java-8.0.19.jar;
+
+# Download Hive dependencies
+RUN wget -P /opt/sql-client/lib https://repo.maven.apache.org/maven2/org/apache/flink/flink-connector-hive_2.11/1.10.0/flink-connector-hive_2.11-1.10.0.jar; \
+    wget -P /opt/sql-client/lib https://repo.maven.apache.org/maven2/org/apache/hive/hive-exec/2.3.6/hive-exec-2.3.6.jar;
+
+# get Hadoop for Hive
+RUN wget -P /opt/flink/lib https://repo.maven.apache.org/maven2/org/apache/flink/flink-shaded-hadoop-2-uber/2.7.5-8.0/flink-shaded-hadoop-2-uber-2.7.5-8.0.jar;
 
 # Copy configuration
 COPY conf/* /opt/flink/conf/
+COPY hive-conf /opt/hive-conf
 
 WORKDIR /opt/sql-client
 ENV SQL_CLIENT_HOME /opt/sql-client
+
+ENTRYPOINT ["tail", "-f", "/dev/null"]
