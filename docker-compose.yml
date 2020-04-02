@@ -20,7 +20,8 @@ services:
     build: ./data-image
     command: "java -classpath /opt/data/data-producer.jar com.ververica.sql_training.data_producer.TaxiRecordProducer --input file /opt/data --output kafka kafka:9092 --speedup 10.0"
   jobmanager:
-    image: flink:1.10.0-scala_2.11
+    image: fhueske/flink-s3:1.10.0-scala_2.11
+    build: ./flink-image
     hostname: "jobmanager"
     expose:
       - "6123"
@@ -30,7 +31,8 @@ services:
     environment:
       - JOB_MANAGER_RPC_ADDRESS=jobmanager
   taskmanager:
-    image: flink:1.10.0-scala_2.11
+    image: fhueske/flink-s3:1.10.0-scala_2.11
+    build: ./flink-image
     expose:
       - "6121"
       - "6122"
@@ -48,7 +50,8 @@ services:
       - "9083"
   minio:
     image: minio/minio:latest
-    command: server /data
+    entrypoint: sh
+    command: -c 'mkdir -p /data/sql-demo && /usr/bin/minio server /data'
     environment:
       - MINIO_ACCESS_KEY=sql-demo
       - MINIO_SECRET_KEY=demo-sql
