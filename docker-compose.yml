@@ -81,9 +81,9 @@ services:
     image: mysql:8.0.19
     command: --default-authentication-plugin=mysql_native_password
     environment:
-      MYSQL_USER: "flink"
-      MYSQL_PASSWORD: "secret"
-      MYSQL_DATABASE: "flinksql"
+      MYSQL_USER: "sql-demo"
+      MYSQL_PASSWORD: "demo-sql"
+      MYSQL_DATABASE: "sql-demo"
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
     volumes:
       - ./mysql:/docker-entrypoint-initdb.d
