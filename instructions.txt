@@ -6,6 +6,32 @@
   - orders.tbl
   - lineitem.tbl
 
+In Hive: --> Everything batch related
+
+- dev_region
+- prod_region
+- dev_nation
+- prod_nation
+- dev_customer
+- prod_customer
+- dev_rates
+- prod_rates
+- dev_orders
+- dev_lineitem
+
+In YAML: --> Everything streaming related
+- prod_orders
+- prod_orders_sink
+- prod_lineitem
+- prod_lineitem_sink
+- prod_rates_temporal
+- prod_rates_history_sink
+- prod_rates_history
+
+During Demo: --> Everything streaming related that can be stored in Hive
+- prod_orders
+
+
 2. Prepare MySQL
 
 CREATE TABLE PROD_REGION (
@@ -51,10 +77,10 @@ INSERT INTO PROD_RATES VALUES (TIMESTAMP '2020-04-19 10:01:52.154', 'CNY', 8.016
 
 3. Move data into MySQL
 
-CREATE TABLE DEV_REGION (
-  R_REGIONKEY     INTEGER,
-  R_NAME          STRING,
-  R_COMMENT       STRING
+CREATE TABLE dev_region (
+  r_regionkey     INTEGER,
+  r_name          STRING,
+  r_comment       STRING
 ) WITH (
   'connector.type' = 'filesystem',
   'connector.path' = 's3://sql-demo/region.tbl',
@@ -62,10 +88,10 @@ CREATE TABLE DEV_REGION (
   'format.field-delimiter' = '|'
 );
 
-CREATE TABLE PROD_REGION (
-  R_REGIONKEY     INTEGER,
-  R_NAME          STRING,
-  R_COMMENT       STRING
+CREATE TABLE prod_region (
+  r_regionkey     INTEGER,
+  r_name          STRING,
+  r_comment       STRING
 ) WITH (
   'connector.type' = 'jdbc',
   'connector.url' = 'jdbc:mysql://mysql:3306/sql-demo',
@@ -77,15 +103,15 @@ CREATE TABLE PROD_REGION (
   'connector.lookup.cache.ttl' = '0s'
 );
 
-INSERT INTO PROD_REGION SELECT * FROM DEV_REGION;
+INSERT INTO prod_region SELECT * FROM dev_region;
 
-SELECT * FROM PROD_REGION;
+SELECT * FROM prod_region;
 
-CREATE TABLE DEV_NATION (
-  N_NATIONKEY     INTEGER,
-  N_NAME          STRING,
-  N_REGIONKEY     INTEGER,
-  N_COMMENT       STRING
+CREATE TABLE dev_nation (
+  n_nationkey     INTEGER,
+  n_name          STRING,
+  n_regionkey     INTEGER,
+  n_comment       STRING
 ) WITH (
   'connector.type' = 'filesystem',
   'connector.path' = 's3://sql-demo/nation.tbl',
@@ -93,11 +119,11 @@ CREATE TABLE DEV_NATION (
   'format.field-delimiter' = '|'
 );
 
-CREATE TABLE PROD_NATION (
-  N_NATIONKEY     INTEGER,
-  N_NAME          STRING,
-  N_REGIONKEY     INTEGER,
-  N_COMMENT       STRING
+CREATE TABLE prod_nation (
+  n_nationkey     INTEGER,
+  n_name          STRING,
+  n_regionkey     INTEGER,
+  n_comment       STRING
 ) WITH (
   'connector.type' = 'jdbc',
   'connector.url' = 'jdbc:mysql://mysql:3306/sql-demo',
@@ -109,19 +135,19 @@ CREATE TABLE PROD_NATION (
   'connector.lookup.cache.ttl' = '0s'
 );
 
-INSERT INTO PROD_NATION SELECT * FROM DEV_NATION;
+INSERT INTO prod_nation SELECT * FROM dev_nation;
 
-SELECT * FROM PROD_NATION;
+SELECT * FROM prod_nation;
 
-CREATE TABLE DEV_CUSTOMER (
-  C_CUSTKEY       INTEGER,
-  C_NAME          STRING,
-  C_ADDRESS       STRING,
-  C_NATIONKEY     INTEGER,
-  C_PHONE         STRING,
-  C_ACCTBAL       DOUBLE,
-  C_MKTSEGMENT    STRING,
-  C_COMMENT       STRING
+CREATE TABLE dev_customer (
+  c_custkey       INTEGER,
+  c_name          STRING,
+  c_address       STRING,
+  c_nationkey     INTEGER,
+  c_phone         STRING,
+  c_acctbal       DOUBLE,
+  c_mktsegment    STRING,
+  c_comment       STRING
 ) WITH (
   'connector.type' = 'filesystem',
   'connector.path' = 's3://sql-demo/customer.tbl',
@@ -129,15 +155,15 @@ CREATE TABLE DEV_CUSTOMER (
   'format.field-delimiter' = '|'
 );
 
-CREATE TABLE PROD_CUSTOMER (
-  C_CUSTKEY       INTEGER,
-  C_NAME          STRING,
-  C_ADDRESS       STRING,
-  C_NATIONKEY     INTEGER,
-  C_PHONE         STRING,
-  C_ACCTBAL       DOUBLE,
-  C_MKTSEGMENT    STRING,
-  C_COMMENT       STRING
+CREATE TABLE prod_customer (
+  c_custkey       INTEGER,
+  c_name          STRING,
+  c_address       STRING,
+  c_nationkey     INTEGER,
+  c_phone         STRING,
+  c_acctbal       DOUBLE,
+  c_mktsegment    STRING,
+  c_comment       STRING
 ) WITH (
   'connector.type' = 'jdbc',
   'connector.url' = 'jdbc:mysql://mysql:3306/sql-demo',
@@ -149,14 +175,14 @@ CREATE TABLE PROD_CUSTOMER (
   'connector.lookup.cache.ttl' = '0s'
 );
 
-INSERT INTO PROD_CUSTOMER SELECT * FROM DEV_CUSTOMER;
+INSERT INTO prod_customer SELECT * FROM dev_customer;
 
-SELECT * FROM PROD_CUSTOMER;
+SELECT * FROM prod_customer;
 
-CREATE TABLE DEV_RATES (
-  RS_TIMESTAMP    TIMESTAMP(3),
-  RS_SYMBOL       STRING,
-  RS_RATE         DOUBLE
+CREATE TABLE dev_rates (
+  rs_timestamp    TIMESTAMP(3),
+  rs_symbol       STRING,
+  rs_rate         DOUBLE
 ) WITH (
   'connector.type' = 'filesystem',
   'connector.path' = 's3://sql-demo/rates.tbl',
@@ -165,12 +191,12 @@ CREATE TABLE DEV_RATES (
 );
 
 
-INSERT INTO PROD_RATES_HISTORY_SINK SELECT * FROM DEV_RATES;
+INSERT INTO prod_rates_history_sink SELECT * FROM dev_rates;
 
-CREATE TABLE PROD_RATES (
-  RS_TIMESTAMP    TIMESTAMP(3),
-  RS_SYMBOL       STRING,
-  RS_RATE         DOUBLE
+CREATE TABLE prod_rates (
+  rs_timestamp    TIMESTAMP(3),
+  rs_symbol       STRING,
+  rs_rate         DOUBLE
 ) WITH (
   'connector.type' = 'jdbc',
   'connector.url' = 'jdbc:mysql://mysql:3306/sql-demo',
@@ -182,22 +208,22 @@ CREATE TABLE PROD_RATES (
   'connector.lookup.cache.ttl' = '0s'
 );
 
-SELECT * FROM PROD_RATES;
+SELECT * FROM prod_rates;
 
 3. Run window query
 
-CREATE TABLE DEV_ORDERS (
-  O_ORDERKEY      INTEGER,
-  O_CUSTKEY       INTEGER,
-  O_ORDERSTATUS   STRING,
-  O_TOTALPRICE    DOUBLE,
-  O_CURRENCY      STRING,
-  O_ORDERTIME     TIMESTAMP(3),
-  O_ORDERPRIORITY STRING,
-  O_CLERK         STRING, 
-  O_SHIPPRIORITY  INTEGER,
-  O_COMMENT       STRING,
-  WATERMARK FOR O_ORDERTIME AS O_ORDERTIME - INTERVAL '5' MINUTE
+CREATE TABLE dev_orders (
+  o_orderkey      INTEGER,
+  o_custkey       INTEGER,
+  o_orderstatus   STRING,
+  o_totalprice    DOUBLE,
+  o_currency      STRING,
+  o_ordertime     TIMESTAMP(3),
+  o_orderpriority STRING,
+  o_clerk         STRING, 
+  o_shippriority  INTEGER,
+  o_comment       STRING,
+  WATERMARK FOR o_ordertime AS o_ordertime - INTERVAL '5' MINUTE
 ) WITH (
   'connector.type' = 'filesystem',
   'connector.path' = 's3://sql-demo/orders.tbl',
@@ -205,18 +231,18 @@ CREATE TABLE DEV_ORDERS (
   'format.field-delimiter' = '|'
 );
 
-CREATE TABLE PROD_ORDERS (
-  O_ORDERKEY      INTEGER,
-  O_CUSTKEY       INTEGER,
-  O_ORDERSTATUS   STRING,
-  O_TOTALPRICE    DOUBLE,
-  O_CURRENCY      STRING,
-  O_ORDERTIME     TIMESTAMP(3),
-  O_ORDERPRIORITY STRING,
-  O_CLERK         STRING,
-  O_SHIPPRIORITY  INTEGER,
-  O_COMMENT       STRING,
-  WATERMARK FOR O_ORDERTIME AS O_ORDERTIME - INTERVAL '5' MINUTE
+CREATE TABLE prod_orders (
+  o_orderkey      INTEGER,
+  o_custkey       INTEGER,
+  o_orderstatus   STRING,
+  o_totalprice    DOUBLE,
+  o_currency      STRING,
+  o_ordertime     TIMESTAMP(3),
+  o_orderpriority STRING,
+  o_clerk         STRING,
+  o_shippriority  INTEGER,
+  o_comment       STRING,
+  WATERMARK FOR o_ordertime AS o_ordertime - INTERVAL '5' MINUTE
 ) WITH (
   'connector.type' = 'kafka',
   'connector.version' = 'universal',
@@ -232,47 +258,47 @@ SET execution.type=batch;
 
 // revenue per currency and hour
 SELECT
-  CEIL(O_ORDERTIME TO HOUR) AS `HOUR`,
-  O_CURRENCY AS `CURRENCY`,
-  SUM(O_TOTALPRICE) AS `REVENUE`
-FROM DEV_ORDERS
+  CEIL(o_ordertime TO HOUR) AS `hour`,
+  o_currency AS `currency`,
+  SUM(o_totalprice) AS `revenue`
+FROM dev_orders
 GROUP BY
-  O_CURRENCY,
-  CEIL(O_ORDERTIME TO HOUR);
+  o_currency,
+  CEIL(o_ordertime TO HOUR);
 
 SELECT
-  TUMBLE_END(O_ORDERTIME, INTERVAL '1' HOUR) AS `HOUR`,
-  O_CURRENCY AS `CURRENCY`,
-  SUM(O_TOTALPRICE) AS `REVENUE`
-FROM DEV_ORDERS
+  TUMBLE_END(o_ordertime, INTERVAL '1' HOUR) AS `hour`,
+  o_currency AS `currency`,
+  SUM(o_totalprice) AS `revenue`
+FROM dev_orders
 GROUP BY
-  O_CURRENCY,
-  TUMBLE(O_ORDERTIME, INTERVAL '1' HOUR);
+  o_currency,
+  TUMBLE(o_ordertime, INTERVAL '1' HOUR);
 
 SET execution.type=streaming;
 
 3. Run different kind of joins
 
-INSERT INTO PROD_ORDERS SELECT * FROM DEV_ORDERS;
+INSERT INTO prod_orders SELECT * FROM dev_orders;
 
-SELECT * FROM PROD_ORDERS;
+SELECT * FROM prod_orders;
 
-CREATE TABLE DEV_LINEITEM (
-  L_ORDERKEY       INTEGER,
-  L_PARTKEY        INTEGER,
-  L_SUPPKEY        INTEGER,
-  L_LINENUMBER     INTEGER,
-  L_QUANTITY       DOUBLE,
-  L_EXTENDEDPRICE  DOUBLE,
-  L_DISCOUNT       DOUBLE,
-  L_TAX            DOUBLE,
-  L_CURRENCY       STRING,
-  L_RETURNFLAG     STRING,
-  L_LINESTATUS     STRING,
-  L_ORDERTIME      TIMESTAMP(3),
-  L_SHIPINSTRUCT   STRING,
-  L_SHIPMODE       STRING,
-  L_COMMENT        STRING
+CREATE TABLE dev_lineitem (
+  l_orderkey       INTEGER,
+  l_partkey        INTEGER,
+  l_suppkey        INTEGER,
+  l_linenumber     INTEGER,
+  l_quantity       DOUBLE,
+  l_extendedprice  DOUBLE,
+  l_discount       DOUBLE,
+  l_tax            DOUBLE,
+  l_currency       STRING,
+  l_returnflag     STRING,
+  l_linestatus     STRING,
+  l_ordertime      TIMESTAMP(3),
+  l_shipinstruct   STRING,
+  l_shipmode       STRING,
+  l_comment        STRING
 ) WITH (
   'connector.type' = 'filesystem',
   'connector.path' = 's3://sql-demo/lineitem.tbl',
@@ -280,24 +306,24 @@ CREATE TABLE DEV_LINEITEM (
   'format.field-delimiter' = '|'
 );
 
-CREATE TABLE PROD_LINEITEM (
-  L_ORDERKEY       INTEGER,
-  L_PARTKEY        INTEGER,
-  L_SUPPKEY        INTEGER,
-  L_LINENUMBER     INTEGER,
-  L_QUANTITY       DOUBLE,
-  L_EXTENDEDPRICE  DOUBLE,
-  L_DISCOUNT       DOUBLE,
-  L_TAX            DOUBLE,
-  L_CURRENCY       STRING,
-  L_RETURNFLAG     STRING,
-  L_LINESTATUS     STRING,
-  L_ORDERTIME      TIMESTAMP(3),
-  L_SHIPINSTRUCT   STRING,
-  L_SHIPMODE       STRING,
-  L_COMMENT        STRING,
-  WATERMARK FOR L_ORDERTIME AS L_ORDERTIME - INTERVAL '5' MINUTE,
-  L_PROCTIME       AS PROCTIME()
+CREATE TABLE prod_lineitem (
+  l_orderkey       INTEGER,
+  l_partkey        INTEGER,
+  l_suppkey        INTEGER,
+  l_linenumber     INTEGER,
+  l_quantity       DOUBLE,
+  l_extendedprice  DOUBLE,
+  l_discount       DOUBLE,
+  l_tax            DOUBLE,
+  l_currency       STRING,
+  l_returnflag     STRING,
+  l_linestatus     STRING,
+  l_ordertime      TIMESTAMP(3),
+  l_shipinstruct   STRING,
+  l_shipmode       STRING,
+  l_comment        STRING,
+  WATERMARK FOR l_ordertime AS l_ordertime - INTERVAL '5' MINUTE,
+  l_proctime       AS PROCTIME()
 ) WITH (
   'connector.type' = 'kafka',
   'connector.version' = 'universal',
@@ -309,106 +335,106 @@ CREATE TABLE PROD_LINEITEM (
   'format.field-delimiter' = '|'
 );
 
-INSERT INTO PROD_LINEITEM SELECT * FROM DEV_LINEITEM;
+INSERT INTO prod_lineitem SELECT * FROM dev_lineitem;
 
-SELECT * FROM PROD_LINEITEM;
+SELECT * FROM prod_lineitem;
 
 // batch join for day reporting
 // show customers and their orders by region and priority
 SELECT
-  R_NAME AS `REGION`,
-  O_ORDERPRIORITY AS `PRIORITY`,
-  COUNT(DISTINCT C_CUSTKEY) AS `NUMBER_OF_CUSTOMERS`,
-  COUNT(O_ORDERKEY) AS `NUMBER_OF_ORDERS`
-FROM DEV_ORDERS
-JOIN PROD_CUSTOMER ON O_CUSTKEY = C_CUSTKEY
-JOIN PROD_NATION ON C_NATIONKEY = N_NATIONKEY
-JOIN PROD_REGION ON N_REGIONKEY = R_REGIONKEY
+  r_name AS `region`,
+  o_orderpriority AS `priority`,
+  COUNT(DISTINCT c_custkey) AS `number_of_customers`,
+  COUNT(o_orderkey) AS `number_of_orders`
+FROM dev_orders
+JOIN prod_customer ON o_custkey = c_custkey
+JOIN prod_nation ON c_nationkey = n_nationkey
+JOIN prod_region ON n_regionkey = r_regionkey
 WHERE
-  FLOOR(O_ORDERTIME TO DAY) = TIMESTAMP '2020-04-17 0:00:00.000'
-  AND NOT O_ORDERPRIORITY = '4-NOT SPECIFIED'
-GROUP BY R_NAME, O_ORDERPRIORITY
-ORDER BY R_NAME, O_ORDERPRIORITY; // remove this and we can execute it in streaming
+  FLOOR(o_ordertime TO DAY) = TIMESTAMP '2020-04-17 0:00:00.000'
+  AND NOT o_orderpriority = '4-NOT SPECIFIED'
+GROUP BY r_name, o_orderpriority
+ORDER BY r_name, o_orderpriority; // remove this and we can execute it in streaming
 
 // stream join
 // show open lineitems with urgent order priority
 SELECT
-  O_ORDERTIME AS `ORDERTIME`,
-  O_ORDERKEY AS `ORDER`,
-  L_LINENUMBER AS `LINENUMBER`,
-  L_PARTKEY AS `PART`,
-  L_SUPPKEY AS `SUPPLIER`,
-  L_QUANTITY AS `QUANTITY`
-FROM PROD_LINEITEM
-JOIN PROD_ORDERS ON O_ORDERKEY = L_ORDERKEY
+  o_ordertime AS `ordertime`,
+  o_orderkey AS `order`,
+  l_linenumber AS `linenumber`,
+  l_partkey AS `part`,
+  l_suppkey AS `supplier`,
+  l_quantity AS `quantity`
+FROM prod_lineitem
+JOIN prod_orders ON o_orderkey = l_orderkey
 WHERE
-  L_ORDERTIME BETWEEN O_ORDERTIME - INTERVAL '5' MINUTE AND O_ORDERTIME AND
-  L_LINESTATUS = 'O' AND
-  O_ORDERPRIORITY = '1-URGENT';
+  l_ordertime BETWEEN o_ordertime - INTERVAL '5' MINUTE AND o_ordertime AND
+  l_linestatus = 'O' AND
+  o_orderpriority = '1-URGENT';
 
 // enrichment join with lookup for rates
 // show open lineitems with approximately revenue in Euro
 SELECT
-  L_PROCTIME AS `QUERYTIME`,
-  L_ORDERKEY AS `ORDER`,
-  L_LINENUMBER AS `LINENUMBER`,
-  (L_EXTENDEDPRICE * (1 - L_DISCOUNT) * (1 + L_TAX)) / RS_RATE AS `OPEN IN EURO`
-FROM PROD_LINEITEM
-JOIN PROD_RATES FOR SYSTEM_TIME AS OF L_PROCTIME ON RS_SYMBOL = L_CURRENCY
+  l_proctime AS `querytime`,
+  l_orderkey AS `order`,
+  l_linenumber AS `linenumber`,
+  (l_extendedprice * (1 - l_discount) * (1 + l_tax)) / rs_rate AS `open in euro`
+FROM prod_lineitem
+JOIN prod_rates FOR SYSTEM_TIME AS OF l_proctime ON rs_symbol = l_currency
 WHERE
-  L_LINESTATUS = 'O';
+  l_linestatus = 'O';
 
 // enrichment join with temporal table for rates
 // show open lineitems with correct revenue in Euro
 SELECT
-  L_ORDERTIME AS `ORDERTIME`,
-  L_ORDERKEY AS `ORDER`,
-  L_LINENUMBER AS `LINENUMBER`,
-  (L_EXTENDEDPRICE * (1 - L_DISCOUNT) * (1 + L_TAX)) / RS_RATE AS `OPEN IN EURO`
+  l_ordertime AS `ordertime`,
+  l_orderkey AS `order`,
+  l_linenumber AS `linenumber`,
+  (l_extendedprice * (1 - l_discount) * (1 + l_tax)) / rs_rate AS `open in euro`
 FROM
-  PROD_LINEITEM,
-  LATERAL TABLE(PROD_RATES_TEMPORAL(L_ORDERTIME))
-WHERE RS_SYMBOL = L_CURRENCY AND
-  L_LINESTATUS = 'O';
+  prod_lineitem,
+  LATERAL TABLE(prod_rates_temporal(l_ordertime))
+WHERE rs_symbol = l_currency AND
+  l_linestatus = 'O';
 
 // MATCH_RECOGNIZE
 // change in ship instruct behavior
-CREATE VIEW LINEITEM_WITH_CUSTOMER AS
+CREATE VIEW lineitem_with_customer AS
 SELECT * FROM (
   SELECT
-    O_CUSTKEY AS `CUSTKEY`,
-    L_ORDERKEY AS `ORDERKEY`,
-    L_LINENUMBER AS `LINENUMBER`,
-    L_ORDERTIME AS `ORDERTIME`,
-    L_SHIPINSTRUCT AS `SHIPINSTRUCT`
-  FROM PROD_LINEITEM
-  JOIN PROD_ORDERS ON O_ORDERKEY = L_ORDERKEY
+    o_custkey AS `custkey`,
+    l_orderkey AS `orderkey`,
+    l_linenumber AS `linenumber`,
+    l_ordertime AS `ordertime`,
+    l_shipinstruct AS `shipinstruct`
+  FROM prod_lineitem
+  JOIN prod_orders ON o_orderkey = l_orderkey
   WHERE
-    L_ORDERTIME BETWEEN O_ORDERTIME - INTERVAL '5' MINUTE AND O_ORDERTIME
+    l_ordertime BETWEEN o_ordertime - INTERVAL '5' MINUTE AND o_ordertime
 );
 
 SELECT *
-FROM LINEITEM_WITH_CUSTOMER
+FROM lineitem_with_customer
 MATCH_RECOGNIZE(
-  PARTITION BY CUSTKEY
-  ORDER BY ORDERTIME
+  PARTITION BY custkey
+  ORDER BY ordertime
   MEASURES
-    COUNT(OTHER.ORDERKEY) AS `LAST REGULAR SHIPINGS`,
-    LAST(OTHER.ORDERKEY) AS `LAST REGULAR ORDER`,
-    LAST(OTHER.LINENUMBER) AS `LAST REGULAR LINENUMBER`,
-    COD.ORDERKEY AS `COD ORDER`,
-    COD.LINENUMBER AS `COD LINENUMBER`
+    COUNT(OTHER.orderkey) AS `last regular shipings`,
+    LAST(OTHER.orderkey) AS `last regular order`,
+    LAST(OTHER.linenumber) AS `last regular linenumber`,
+    COD.orderkey AS `cod order`,
+    COD.linenumber AS `cod linenumber`
   PATTERN (OTHER{15,} COD)
   DEFINE
-    OTHER AS NOT SHIPINSTRUCT = 'COLLECT COD',
-    COD AS SHIPINSTRUCT = 'COLLECT COD'
+    OTHER AS NOT shipinstruct = 'COLLECT COD',
+    COD AS shipinstruct = 'COLLECT COD'
 );
 
 
 // items per hour and customer distribution
-CREATE VIEW CUSTOMER_ITEMS_PER_HOUR AS
-  SELECT CUSTKEY, COUNT(*) AS ITEMS_PER_HOUR
-  FROM LINEITEM_WITH_CUSTOMER
-  GROUP BY CUSTKEY, TUMBLE(ORDERTIME, INTERVAL '1' HOUR);
+CREATE VIEW customer_items_per_hour AS
+  SELECT custkey, COUNT(*) AS items_per_hour
+  FROM lineitem_with_customer
+  GROUP BY custkey, TUMBLE(ordertime, INTERVAL '1' HOUR);
 
-SELECT ITEMS_PER_HOUR, COUNT(*) FROM CUSTOMER_ITEMS_PER_HOUR GROUP BY ITEMS_PER_HOUR
+SELECT items_per_hour, COUNT(*) FROM customer_items_per_hour GROUP BY items_per_hour;

@@ -33,22 +33,22 @@ catalogs:
      hive-conf-dir: /opt/hive-conf
 
 tables:
-  - name: PROD_RATES_HISTORY
+  - name: prod_rates_history
     type: source-table
     update-mode: append
     schema:
-      - name: RS_TIMESTAMP
+      - name: rs_timestamp
         data-type: TIMESTAMP(3)
         rowtime:
           timestamps:
             type: from-field
-            from: RS_RAW_TIMESTAMP
+            from: rs_raw_timestamp
           watermarks:
             type: "periodic-bounded"
             delay: 5000
-      - name: RS_SYMBOL
+      - name: rs_symbol
         data-type: STRING
-      - name: RS_RATE
+      - name: rs_rate
         data-type: DOUBLE
     connector:
       type: kafka
@@ -66,15 +66,15 @@ tables:
       type: csv
       field-delimiter: '|'
 
-  - name: PROD_RATES_HISTORY_SINK
+  - name: prod_rates_history_sink
     type: sink-table
     update-mode: append
     schema:
-      - name: RS_TIMESTAMP
+      - name: rs_timestamp
         data-type: TIMESTAMP(3)
-      - name: RS_SYMBOL
+      - name: rs_symbol
         data-type: STRING
-      - name: RS_RATE
+      - name: rs_rate
         data-type: DOUBLE
     connector:
       type: kafka
@@ -92,54 +92,54 @@ tables:
       type: csv
       field-delimiter: '|'
 
-  - name: PROD_RATES_TEMPORAL
+  - name: prod_rates_temporal
     type: temporal-table
-    history-table: PROD_RATES_HISTORY
-    primary-key: RS_SYMBOL
-    time-attribute: RS_TIMESTAMP
+    history-table: prod_rates_history
+    primary-key: rs_symbol
+    time-attribute: rs_timestamp
 
-  - name: PROD_LINEITEM
+  - name: prod_lineitem
     type: source-table
     update-mode: append
     schema:
-      - name: L_ORDERKEY
+      - name: l_orderkey
         data-type: INTEGER
-      - name: L_PARTKEY
+      - name: l_partkey
         data-type: INTEGER
-      - name: L_SUPPKEY
+      - name: l_suppkey
         data-type: INTEGER
-      - name: L_LINENUMBER
+      - name: l_linenumber
         data-type: INTEGER
-      - name: L_QUANTITY
+      - name: l_quantity
         data-type: DOUBLE
-      - name: L_EXTENDEDPRICE
+      - name: l_extendedprice
         data-type: DOUBLE
-      - name: L_DISCOUNT
+      - name: l_discount
         data-type: DOUBLE
-      - name: L_TAX
+      - name: l_tax
         data-type: DOUBLE
-      - name: L_CURRENCY
+      - name: l_currency
         data-type: STRING
-      - name: L_RETURNFLAG
+      - name: l_returnflag
         data-type: STRING
-      - name: L_LINESTATUS
+      - name: l_linestatus
         data-type: STRING
-      - name: L_ORDERTIME
+      - name: l_ordertime
         data-type: TIMESTAMP(3)
         rowtime:
           timestamps:
             type: from-field
-            from: L_RAW_ORDERTIME
+            from: l_raw_ordertime
           watermarks:
             type: "periodic-bounded"
             delay: 5000
-      - name: L_SHIPINSTRUCT
+      - name: l_shipinstruct
         data-type: STRING
-      - name: L_SHIPMODE
+      - name: l_shipmode
         data-type: STRING
-      - name: L_COMMENT
+      - name: l_comment
         data-type: STRING
-      - name: L_PROCTIME
+      - name: l_proctime
         data-type: TIMESTAMP(3)
         proctime: true
     connector:
@@ -158,39 +158,39 @@ tables:
       type: csv
       field-delimiter: '|'
 
-  - name: PROD_LINEITEM_SINK
+  - name: prod_lineitem_sink
     type: sink-table
     update-mode: append
     schema:
-      - name: L_ORDERKEY
+      - name: l_orderkey
         data-type: INTEGER
-      - name: L_PARTKEY
+      - name: l_partkey
         data-type: INTEGER
-      - name: L_SUPPKEY
+      - name: l_suppkey
         data-type: INTEGER
-      - name: L_LINENUMBER
+      - name: l_linenumber
         data-type: INTEGER
-      - name: L_QUANTITY
+      - name: l_quantity
         data-type: DOUBLE
-      - name: L_EXTENDEDPRICE
+      - name: l_extendedprice
         data-type: DOUBLE
-      - name: L_DISCOUNT
+      - name: l_discount
         data-type: DOUBLE
-      - name: L_TAX
+      - name: l_tax
         data-type: DOUBLE
-      - name: L_CURRENCY
+      - name: l_currency
         data-type: STRING
-      - name: L_RETURNFLAG
+      - name: l_returnflag
         data-type: STRING
-      - name: L_LINESTATUS
+      - name: l_linestatus
         data-type: STRING
-      - name: L_ORDERTIME
+      - name: l_ordertime
         data-type: TIMESTAMP(3)
-      - name: L_SHIPINSTRUCT
+      - name: l_shipinstruct
         data-type: STRING
-      - name: L_SHIPMODE
+      - name: l_shipmode
         data-type: STRING
-      - name: L_COMMENT
+      - name: l_comment
         data-type: STRING
     connector:
       type: kafka
@@ -208,21 +208,21 @@ tables:
       type: csv
       field-delimiter: '|'
 
-  - name: PROD_ORDERS
+  - name: prod_orders
     type: source-table
     update-mode: append
     schema:
-      - name: O_ORDERKEY
+      - name: o_orderkey
         data-type: INTEGER
-      - name: O_CUSTKEY
+      - name: o_custkey
         data-type: INTEGER
-      - name: O_ORDERSTATUS
+      - name: o_orderstatus
         data-type: STRING
-      - name: O_TOTALPRICE
+      - name: o_totalprice
         data-type: DOUBLE
-      - name: O_CURRENCY
+      - name: o_currency
         data-type: STRING
-      - name: O_ORDERTIME
+      - name: o_ordertime
         data-type: TIMESTAMP(3)
         rowtime:
           timestamps:
@@ -231,13 +231,13 @@ tables:
           watermarks:
             type: "periodic-bounded"
             delay: 5000
-      - name: O_ORDERPRIORITY
+      - name: o_orderpriority
         data-type: STRING
-      - name: O_CLERK
+      - name: o_clerk
         data-type: STRING
-      - name: O_SHIPPRIORITY
+      - name: o_shippriority
         data-type: INTEGER
-      - name: O_COMMENT
+      - name: o_comment
         data-type: STRING
     connector:
       type: kafka
@@ -255,29 +255,29 @@ tables:
       type: csv
       field-delimiter: '|'
 
-  - name: PROD_ORDERS_SINK
+  - name: prod_orders_sink
     type: sink-table
     update-mode: append
     schema:
-      - name: O_ORDERKEY
+      - name: o_orderkey
         data-type: INTEGER
-      - name: O_CUSTKEY
+      - name: o_custkey
         data-type: INTEGER
-      - name: O_ORDERSTATUS
+      - name: o_orderstatus
         data-type: STRING
-      - name: O_TOTALPRICE
+      - name: o_totalprice
         data-type: DOUBLE
-      - name: O_CURRENCY
+      - name: o_currency
         data-type: STRING
-      - name: O_ORDERTIME
+      - name: o_ordertime
         data-type: TIMESTAMP(3)
-      - name: O_ORDERPRIORITY
+      - name: o_orderpriority
         data-type: STRING
-      - name: O_CLERK
+      - name: o_clerk
         data-type: STRING
-      - name: O_SHIPPRIORITY
+      - name: o_shippriority
         data-type: INTEGER
-      - name: O_COMMENT
+      - name: o_comment
         data-type: STRING
     connector:
       type: kafka
