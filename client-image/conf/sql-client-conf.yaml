@@ -53,7 +53,7 @@ tables:
     connector:
       type: kafka
       version: universal
-      topic: Rates
+      topic: rates
       startup-mode: earliest-offset
       properties:
         - key: zookeeper.connect
@@ -79,7 +79,7 @@ tables:
     connector:
       type: kafka
       version: universal
-      topic: Rates
+      topic: rates
       startup-mode: earliest-offset
       properties:
         - key: zookeeper.connect
@@ -145,7 +145,7 @@ tables:
     connector:
       type: kafka
       version: universal
-      topic: Lineitem
+      topic: lineitem
       startup-mode: 'earliest-offset'
       properties:
         - key: zookeeper.connect
@@ -195,7 +195,7 @@ tables:
     connector:
       type: kafka
       version: universal
-      topic: Lineitem
+      topic: lineitem
       startup-mode: 'earliest-offset'
       properties:
         - key: zookeeper.connect
@@ -242,7 +242,7 @@ tables:
     connector:
       type: kafka
       version: universal
-      topic: Orders
+      topic: orders
       startup-mode: 'earliest-offset'
       properties:
         - key: zookeeper.connect
@@ -282,7 +282,7 @@ tables:
     connector:
       type: kafka
       version: universal
-      topic: Orders
+      topic: orders
       startup-mode: 'earliest-offset'
       properties:
         - key: zookeeper.connect

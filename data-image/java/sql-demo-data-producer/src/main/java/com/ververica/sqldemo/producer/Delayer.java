@@ -16,13 +16,13 @@
 
 package com.ververica.sqldemo.producer;
 
-import com.ververica.sqldemo.producer.records.TaxiRecord;
+import com.ververica.sqldemo.producer.records.TpchRecord;
 
 import java.time.Instant;
 import java.util.function.UnaryOperator;
 
 /**
- * Delays forwarding of TaxiRecords based on their timestamp.
+ * Delays forwarding of Records based on their timestamp.
  * By default, records that have timestamps that are 10 minutes apart from each other are emitted
  * 10 minutes apart from each other.
  *
@@ -31,7 +31,7 @@ import java.util.function.UnaryOperator;
  *
  * The delayer assumes that records are provided with monotonically increasing timestamps.
  */
-public class Delayer implements UnaryOperator<TaxiRecord> {
+public class Delayer implements UnaryOperator<TpchRecord> {
 
     // the speedup factor
     private final double speedUp;
@@ -54,7 +54,7 @@ public class Delayer implements UnaryOperator<TaxiRecord> {
     }
 
     @Override
-    public TaxiRecord apply(TaxiRecord record) {
+    public TpchRecord apply(TpchRecord record) {
         long thisEventTime = record.getEventTime().getTime();
 
         if (startEventTime < 0) {

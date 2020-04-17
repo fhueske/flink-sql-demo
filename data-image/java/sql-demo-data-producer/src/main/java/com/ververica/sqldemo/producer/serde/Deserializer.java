@@ -14,11 +14,20 @@
  * limitations under the License.
  */
 
-package com.ververica.sqldemo.producer.records;
+package com.ververica.sqldemo.producer.serde;
 
-import java.util.Date;
+import com.ververica.sqldemo.producer.records.Relation;
+import com.ververica.sqldemo.producer.records.TpchRecord;
 
-public interface TaxiRecord {
+public class Deserializer {
 
-    Date getEventTime();
+    private final Relation relation;
+
+    public Deserializer(Relation relation) {
+        this.relation = relation;
+    }
+
+    public TpchRecord parseFromString(String line) {
+        return new TpchRecord(line, relation);
+    }
 }

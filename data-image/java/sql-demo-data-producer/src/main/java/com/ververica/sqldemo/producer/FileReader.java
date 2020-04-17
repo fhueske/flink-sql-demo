@@ -16,8 +16,9 @@
 
 package com.ververica.sqldemo.producer;
 
-import com.ververica.sqldemo.producer.json_serde.JsonDeserializer;
-import com.ververica.sqldemo.producer.records.TaxiRecord;
+import com.ververica.sqldemo.producer.serde.Deserializer;
+import com.ververica.sqldemo.producer.records.Relation;
+import com.ververica.sqldemo.producer.records.TpchRecord;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -25,35 +26,31 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import java.util.zip.GZIPInputStream;
 
-/**
- * Reads JSON-encoded TaxiRecords from a gzipped text file.
- */
-public class FileReader implements Supplier<TaxiRecord> {
+public class FileReader implements Supplier<TpchRecord> {
 
-    private final Iterator<TaxiRecord> records;
+    private final Iterator<TpchRecord> records;
     private final String filePath;
 
-    public FileReader(String filePath, Class<? extends TaxiRecord> recordClazz) throws IOException {
+    public FileReader(String filePath, Relation relation) throws IOException {
 
         this.filePath = filePath;
-        JsonDeserializer<?> deserializer = new JsonDeserializer<>(recordClazz);
+        Deserializer deserializer = new Deserializer(relation);
         try {
 
             BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(new GZIPInputStream(new FileInputStream(filePath)), StandardCharsets.UTF_8));
+                    new InputStreamReader(new FileInputStream(filePath), StandardCharsets.UTF_8));
 
             Stream<String> lines = reader.lines().sequential();
-            records = lines.map(l -> (TaxiRecord) deserializer.parseFromString(l)).iterator();
+            records = lines.map(l -> deserializer.parseFromString(l)).iterator();
 
         } catch (IOException e) {
-            throw new IOException("Error reading TaxiRecords from file: " + filePath, e);
+            throw new IOException("Error reading records from file: " + filePath, e);
         }
     }
 
     @Override
-    public TaxiRecord get() {
+    public TpchRecord get() {
 
         if (records.hasNext()) {
             return records.next();

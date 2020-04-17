@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 
-package com.ververica.sqldemo.producer;
+package com.ververica.sqldemo.producer.serde;
 
-import com.ververica.sqldemo.producer.serde.Serializer;
 import com.ververica.sqldemo.producer.records.TpchRecord;
 
-import java.util.function.Consumer;
+public class Serializer {
 
-public class ConsolePrinter implements Consumer<TpchRecord> {
+    public String toString(TpchRecord r) {
+        return r.getRecord();
+    }
 
-    private final Serializer serializer = new Serializer();
-
-    @Override
-    public void accept(TpchRecord record) {
-        String jsonString = serializer.toString(record);
-        System.out.println(jsonString);
+    public byte[] toBytes(TpchRecord r) {
+        return r.getRecord().getBytes();
     }
 }

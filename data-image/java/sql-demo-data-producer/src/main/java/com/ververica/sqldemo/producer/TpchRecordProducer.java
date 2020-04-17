@@ -16,10 +16,8 @@
 
 package com.ververica.sqldemo.producer;
 
-import com.ververica.sqldemo.producer.records.DriverChange;
-import com.ververica.sqldemo.producer.records.Fare;
-import com.ververica.sqldemo.producer.records.Ride;
-import com.ververica.sqldemo.producer.records.TaxiRecord;
+import com.ververica.sqldemo.producer.records.Relation;
+import com.ververica.sqldemo.producer.records.TpchRecord;
 
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -27,22 +25,22 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
- * Produces TaxiRecords (Ride, Fare, DriverChange) into Kafka topics.
+ * Produces TpchRecords (Orders, Lineitem, Rates) into Kafka topics.
  */
-public class TaxiRecordProducer {
+public class TpchRecordProducer {
 
     public static void main(String[] args) throws InterruptedException {
 
         boolean areSuppliersConfigured = false;
         boolean areConsumersConfigured = false;
 
-        Supplier<TaxiRecord> rideSupplier = null;
-        Supplier<TaxiRecord> fareSupplier = null;
-        Supplier<TaxiRecord> driverChangeSupplier = null;
+        Supplier<TpchRecord> ordersSupplier = null;
+        Supplier<TpchRecord> lineitemSupplier = null;
+        Supplier<TpchRecord> ratesSupplier = null;
 
-        Consumer<TaxiRecord> rideConsumer = null;
-        Consumer<TaxiRecord> fareConsumer = null;
-        Consumer<TaxiRecord> driverChangeConsumer = null;
+        Consumer<TpchRecord> ordersConsumer = null;
+        Consumer<TpchRecord> lineitemConsumer = null;
+        Consumer<TpchRecord> ratesConsumer = null;
 
         double speedup = 1.0d;
 
@@ -58,9 +56,9 @@ public class TaxiRecordProducer {
                         case "file":
                             String basePath = args[argOffset++];
                             try {
-                                rideSupplier = new FileReader(basePath + "/rides.txt.gz", Ride.class);
-                                fareSupplier = new FileReader(basePath + "/fares.txt.gz", Fare.class);
-                                driverChangeSupplier = new FileReader(basePath + "/driverChanges.txt.gz", DriverChange.class);
+                                ordersSupplier = new FileReader(basePath + "/orders.tbl", Relation.ORDERS);
+                                lineitemSupplier = new FileReader(basePath + "/lineitem.tbl", Relation.LINEITEM);
+                                ratesSupplier = new FileReader(basePath + "/rates.tbl", Relation.RATES);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -74,15 +72,15 @@ public class TaxiRecordProducer {
                     String sink = args[argOffset++];
                     switch (sink) {
                         case "console":
-                            rideConsumer = new ConsolePrinter();
-                            fareConsumer = new ConsolePrinter();
-                            driverChangeConsumer = new ConsolePrinter();
+                            ordersConsumer = new ConsolePrinter();
+                            lineitemConsumer = new ConsolePrinter();
+                            ratesConsumer = new ConsolePrinter();
                             break;
                         case "kafka":
                             String brokers = args[argOffset++];
-                            rideConsumer = new KafkaProducer("Rides", brokers);
-                            fareConsumer = new KafkaProducer("Fares", brokers);
-                            driverChangeConsumer = new KafkaProducer("DriverChanges", brokers);
+                            ordersConsumer = new KafkaProducer("orders", brokers);
+                            lineitemConsumer = new KafkaProducer("lineitem", brokers);
+                            ratesConsumer = new KafkaProducer("rates", brokers);
                             break;
                         default:
                             throw new IllegalArgumentException("Unknown output configuration");
@@ -106,9 +104,9 @@ public class TaxiRecordProducer {
         }
 
         // create three threads for each record type
-        Thread ridesFeeder = new Thread(new TaxiRecordFeeder(rideSupplier, new Delayer(speedup), rideConsumer));
-        Thread faresFeeder = new Thread(new TaxiRecordFeeder(fareSupplier, new Delayer(speedup), fareConsumer));
-        Thread driverChangesFeeder = new Thread(new TaxiRecordFeeder(driverChangeSupplier, new Delayer(speedup), driverChangeConsumer));
+        Thread ridesFeeder = new Thread(new TpchRecordFeeder(ordersSupplier, new Delayer(speedup), ordersConsumer));
+        Thread faresFeeder = new Thread(new TpchRecordFeeder(lineitemSupplier, new Delayer(speedup), lineitemConsumer));
+        Thread driverChangesFeeder = new Thread(new TpchRecordFeeder(ratesSupplier, new Delayer(speedup), ratesConsumer));
 
         // start emitting data
         ridesFeeder.start();
@@ -121,13 +119,13 @@ public class TaxiRecordProducer {
         driverChangesFeeder.join();
     }
 
-    public static class TaxiRecordFeeder implements Runnable {
+    public static class TpchRecordFeeder implements Runnable {
 
-        private final Supplier<TaxiRecord> source;
+        private final Supplier<TpchRecord> source;
         private final Delayer delayer;
-        private final Consumer<TaxiRecord> sink;
+        private final Consumer<TpchRecord> sink;
 
-        TaxiRecordFeeder(Supplier<TaxiRecord> source, Delayer delayer, Consumer<TaxiRecord> sink) {
+        TpchRecordFeeder(Supplier<TpchRecord> source, Delayer delayer, Consumer<TpchRecord> sink) {
             this.source = source;
             this.delayer = delayer;
             this.sink = sink;

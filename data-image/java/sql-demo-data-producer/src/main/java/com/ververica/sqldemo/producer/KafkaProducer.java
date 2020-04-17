@@ -16,8 +16,8 @@
 
 package com.ververica.sqldemo.producer;
 
-import com.ververica.sqldemo.producer.json_serde.JsonSerializer;
-import com.ververica.sqldemo.producer.records.TaxiRecord;
+import com.ververica.sqldemo.producer.serde.Serializer;
+import com.ververica.sqldemo.producer.records.TpchRecord;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
@@ -28,22 +28,22 @@ import java.util.function.Consumer;
 /**
  * Produces TaxiRecords into a Kafka topic.
  */
-public class KafkaProducer implements Consumer<TaxiRecord> {
+public class KafkaProducer implements Consumer<TpchRecord> {
 
     private final String topic;
     private final org.apache.kafka.clients.producer.KafkaProducer<byte[], byte[]> producer;
-    private final JsonSerializer<TaxiRecord> serializer;
+    private final Serializer serializer;
 
     public KafkaProducer(String kafkaTopic, String kafkaBrokers) {
         this.topic = kafkaTopic;
         this.producer = new org.apache.kafka.clients.producer.KafkaProducer<>(createKafkaProperties(kafkaBrokers));
-        this.serializer = new JsonSerializer<>();
+        this.serializer = new Serializer();
     }
 
     @Override
-    public void accept(TaxiRecord record) {
+    public void accept(TpchRecord record) {
         // serialize record as JSON
-        byte[] data = serializer.toJSONBytes(record);
+        byte[] data = serializer.toBytes(record);
         // create producer record and publish to Kafka
         ProducerRecord<byte[], byte[]> kafkaRecord = new ProducerRecord<>(topic, data);
         producer.send(kafkaRecord);

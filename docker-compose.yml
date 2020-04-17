@@ -18,7 +18,13 @@ services:
   data-provider:
     image: fhueske/flink-sql-demo-data:1
     build: ./data-image
-    command: "java -classpath /opt/data/data-producer.jar com.ververica.sql_training.data_producer.TaxiRecordProducer --input file /opt/data --output kafka kafka:9092 --speedup 10.0"
+    environment:
+      - MC_HOST_minio=http://sql-demo:demo-sql@minio:9000
+      - KAFKA_HOST=kafka:9092
+      - SPEEDUP=10.0
+    depends_on:
+      - minio
+      - kafka
   jobmanager:
     image: fhueske/flink-s3:1.10.0-scala_2.11
     build: ./flink-image
@@ -74,7 +80,7 @@ services:
       KAFKA_ADVERTISED_PORT: "9092"
       HOSTNAME_COMMAND: "route -n | awk '/UG[ \t]/{print $$2}'"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_CREATE_TOPICS: "Rides:1:1, Fares:1:1, DriverChanges:1:1"
+      KAFKA_CREATE_TOPICS: "rates:1:1, lineitem:1:1, orders:1:1"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
   mysql:

@@ -31,7 +31,7 @@ RUN cd /opt/data-producer; \
 # Build SQL Playground Image
 ###############################################################################
 
-FROM flink:1.10.0-scala_2.11
+FROM openjdk:8-jre
 
 ADD VERSION .
 
@@ -40,11 +40,21 @@ COPY --from=builder /opt/data-producer/target/sql-demo-data-producer-*.jar /opt/
 
 # Create data folders
 RUN mkdir -p /opt/data; \
-    mkdir -p /opt/data/stream;
-# Download data files
-#    wget -O /opt/data/driverChanges.txt.gz 'https://drive.google.com/uc?export=download&id=1pf4tfv-YpoVQ9_O0948M8oXeCfVH-0MH'; \
-#    wget -O /opt/data/fares.txt.gz 'https://drive.google.com/uc?export=download&id=1SriiwcIdMvY7uJsWSY4Hhh32iO3F4ND2'; \
-#    wget -O /opt/data/rides.txt.gz 'https://drive.google.com/uc?export=download&id=1gY8W07OFvB7_4lHlAyingM4WQzs0_8lT';
+    mkdir -p /opt/data/minio; \
+    mkdir -p /opt/data/kafka;
 
-WORKDIR /opt/sql-client
-ENV SQL_CLIENT_HOME /opt/sql-client
+# Copy Minio data files
+COPY ./data/*.tbl /opt/data/minio/
+
+# Link Kafka data files
+RUN ln -s /opt/data/minio/lineitem.tbl /opt/data/kafka/lineitem.tbl; \
+    ln -s /opt/data/minio/orders.tbl /opt/data/kafka/orders.tbl; \
+    ln -s /opt/data/minio/rates.tbl /opt/data/kafka/rates.tbl;
+
+# get mc and configure (minio client)
+RUN cd /opt; \
+    wget https://dl.min.io/client/mc/release/linux-amd64/mc; \
+    chmod +x mc
+
+COPY docker-entrypoint.sh /
+ENTRYPOINT ["/docker-entrypoint.sh"]
