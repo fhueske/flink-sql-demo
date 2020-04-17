@@ -18,10 +18,6 @@
 
 FROM openjdk:8-jre
 
-#COPY ./archive/apache-hive-2.3.6-bin.tar.gz /opt
-#COPY ./archive/db-derby-10.10.2.0-bin.tar.gz /opt
-#COPY ./archive/hadoop-2.9.2.tar.gz /opt
-
 # Copy binary distributions from Apache servers/mirrors
 RUN cd /opt && \
     wget http://apache.lauf-forum.at/hadoop/common/hadoop-2.9.2/hadoop-2.9.2.tar.gz && \
@@ -43,6 +39,12 @@ RUN cd /opt && \
     cp /opt/db-derby-10.10.2.0-bin/lib/derbytools.jar /opt/apache-hive-2.3.6-bin/lib 
 
 COPY hive-conf/hive-site.xml /opt/apache-hive-2.3.6-bin/conf
+
+# Copy metastore_db backup file and restore it
+COPY ./metastore_db_backup.tar /
+RUN cd /; \
+    tar xf /metastore_db_backup.tar; \
+    rm /metastore_db_backup.tar;
     
 ENV HADOOP_HOME /opt/hadoop-2.9.2
 ENV DERBY_INSTALL /opt/db-derby-10.10.2.0-bin
