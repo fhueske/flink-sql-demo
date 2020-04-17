@@ -33,141 +33,267 @@ catalogs:
      hive-conf-dir: /opt/hive-conf
 
 tables:
-  - name: Rides
-    type: source
+  - name: PROD_RATES_HISTORY
+    type: source-table
     update-mode: append
     schema:
-    - name: rideId
-      type: LONG
-    - name: taxiId
-      type: LONG
-    - name: isStart
-      type: BOOLEAN
-    - name: lon
-      type: FLOAT
-    - name: lat
-      type: FLOAT
-    - name: rideTime
-      type: TIMESTAMP
-      rowtime:
-        timestamps:
-          type: "from-field"
-          from: "eventTime"
-        watermarks:
-          type: "periodic-bounded"
-          delay: "60000"
-    - name: psgCnt
-      type: INT
+      - name: RS_TIMESTAMP
+        data-type: TIMESTAMP(3)
+        rowtime:
+          timestamps:
+            type: from-field
+            from: RS_RAW_TIMESTAMP
+          watermarks:
+            type: "periodic-bounded"
+            delay: 5000
+      - name: RS_SYMBOL
+        data-type: STRING
+      - name: RS_RATE
+        data-type: DOUBLE
     connector:
-      property-version: 1
       type: kafka
       version: universal
-      topic: Rides
+      topic: Rates
       startup-mode: earliest-offset
       properties:
-      - key: zookeeper.connect
-        value: zookeeper:2181
-      - key: bootstrap.servers
-        value: kafka:9092
-      - key: group.id
-        value: testGroup
+        - key: zookeeper.connect
+          value: not-needed
+        - key: bootstrap.servers
+          value: kafka:9092
+        - key: group.id
+          value: testGroup
     format:
-      property-version: 1
-      type: json
-      schema: "ROW(rideId LONG, isStart BOOLEAN, eventTime TIMESTAMP, lon FLOAT, lat FLOAT, psgCnt INT, taxiId LONG)"
-  - name: Fares
-    type: source
-    update-mode: append
-    schema:
-    - name: rideId
-      type: LONG
-    - name: payTime
-      type: TIMESTAMP
-      rowtime:
-        timestamps:
-          type: "from-field"
-          from: "eventTime"
-        watermarks:
-          type: "periodic-bounded"
-          delay: "60000"
-    - name: payMethod
-      type: STRING
-    - name: tip
-      type: FLOAT
-    - name: toll
-      type: FLOAT
-    - name: fare
-      type: FLOAT
-    connector:
-      property-version: 1
-      type: kafka
-      version: universal
-      topic: Fares
-      startup-mode: earliest-offset
-      properties:
-      - key: zookeeper.connect
-        value: zookeeper:2181
-      - key: bootstrap.servers
-        value: kafka:9092
-      - key: group.id
-        value: testGroup
-    format:
-      property-version: 1
-      type: json
-      schema: "ROW(rideId LONG, eventTime TIMESTAMP, payMethod STRING, tip FLOAT, toll FLOAT, fare FLOAT)"
-  - name: DriverChanges
-    type: source
-    update-mode: append
-    schema:
-    - name: taxiId
-      type: LONG
-    - name: driverId
-      type: LONG
-    - name: usageStartTime
-      type: TIMESTAMP
-      rowtime:
-        timestamps:
-          type: "from-field"
-          from: "eventTime"
-        watermarks:
-          type: "periodic-bounded"
-          delay: "60000"
-    connector:
-      property-version: 1
-      type: kafka
-      version: universal
-      topic: DriverChanges
-      startup-mode: earliest-offset
-      properties:
-      - key: zookeeper.connect
-        value: zookeeper:2181
-      - key: bootstrap.servers
-        value: kafka:9092
-      - key: group.id
-        value: testGroup
-    format:
-      property-version: 1
-      type: json
-      schema: "ROW(eventTime TIMESTAMP, taxiId LONG, driverId LONG)"
-  - name: Drivers
-    type: temporal-table
-    history-table: DriverChanges
-    primary-key: taxiId
-    time-attribute: usageStartTime
+      type: csv
+      field-delimiter: '|'
 
-# functions:
-# - name: timeDiff
-#   from: class
-#   class: com.ververica.sql_training.udfs.TimeDiff
-# - name: isInNYC
-#   from: class
-#   class: com.ververica.sql_training.udfs.IsInNYC
-# - name: toAreaId
-#   from: class
-#   class: com.ververica.sql_training.udfs.ToAreaId
-# - name: toCoords
-#   from: class
-#   class: com.ververica.sql_training.udfs.ToCoords
+  - name: PROD_RATES_HISTORY_SINK
+    type: sink-table
+    update-mode: append
+    schema:
+      - name: RS_TIMESTAMP
+        data-type: TIMESTAMP(3)
+      - name: RS_SYMBOL
+        data-type: STRING
+      - name: RS_RATE
+        data-type: DOUBLE
+    connector:
+      type: kafka
+      version: universal
+      topic: Rates
+      startup-mode: earliest-offset
+      properties:
+        - key: zookeeper.connect
+          value: not-needed
+        - key: bootstrap.servers
+          value: kafka:9092
+        - key: group.id
+          value: testGroup
+    format:
+      type: csv
+      field-delimiter: '|'
+
+  - name: PROD_RATES_TEMPORAL
+    type: temporal-table
+    history-table: PROD_RATES_HISTORY
+    primary-key: RS_SYMBOL
+    time-attribute: RS_TIMESTAMP
+
+  - name: PROD_LINEITEM
+    type: source-table
+    update-mode: append
+    schema:
+      - name: L_ORDERKEY
+        data-type: INTEGER
+      - name: L_PARTKEY
+        data-type: INTEGER
+      - name: L_SUPPKEY
+        data-type: INTEGER
+      - name: L_LINENUMBER
+        data-type: INTEGER
+      - name: L_QUANTITY
+        data-type: DOUBLE
+      - name: L_EXTENDEDPRICE
+        data-type: DOUBLE
+      - name: L_DISCOUNT
+        data-type: DOUBLE
+      - name: L_TAX
+        data-type: DOUBLE
+      - name: L_CURRENCY
+        data-type: STRING
+      - name: L_RETURNFLAG
+        data-type: STRING
+      - name: L_LINESTATUS
+        data-type: STRING
+      - name: L_ORDERTIME
+        data-type: TIMESTAMP(3)
+        rowtime:
+          timestamps:
+            type: from-field
+            from: L_RAW_ORDERTIME
+          watermarks:
+            type: "periodic-bounded"
+            delay: 5000
+      - name: L_SHIPINSTRUCT
+        data-type: STRING
+      - name: L_SHIPMODE
+        data-type: STRING
+      - name: L_COMMENT
+        data-type: STRING
+      - name: L_PROCTIME
+        data-type: TIMESTAMP(3)
+        proctime: true
+    connector:
+      type: kafka
+      version: universal
+      topic: Lineitem
+      startup-mode: 'earliest-offset'
+      properties:
+        - key: zookeeper.connect
+          value: not-needed
+        - key: bootstrap.servers
+          value: kafka:9092
+        - key: group.id
+          value: testGroup
+    format:
+      type: csv
+      field-delimiter: '|'
+
+  - name: PROD_LINEITEM_SINK
+    type: sink-table
+    update-mode: append
+    schema:
+      - name: L_ORDERKEY
+        data-type: INTEGER
+      - name: L_PARTKEY
+        data-type: INTEGER
+      - name: L_SUPPKEY
+        data-type: INTEGER
+      - name: L_LINENUMBER
+        data-type: INTEGER
+      - name: L_QUANTITY
+        data-type: DOUBLE
+      - name: L_EXTENDEDPRICE
+        data-type: DOUBLE
+      - name: L_DISCOUNT
+        data-type: DOUBLE
+      - name: L_TAX
+        data-type: DOUBLE
+      - name: L_CURRENCY
+        data-type: STRING
+      - name: L_RETURNFLAG
+        data-type: STRING
+      - name: L_LINESTATUS
+        data-type: STRING
+      - name: L_ORDERTIME
+        data-type: TIMESTAMP(3)
+      - name: L_SHIPINSTRUCT
+        data-type: STRING
+      - name: L_SHIPMODE
+        data-type: STRING
+      - name: L_COMMENT
+        data-type: STRING
+    connector:
+      type: kafka
+      version: universal
+      topic: Lineitem
+      startup-mode: 'earliest-offset'
+      properties:
+        - key: zookeeper.connect
+          value: not-needed
+        - key: bootstrap.servers
+          value: kafka:9092
+        - key: group.id
+          value: testGroup
+    format:
+      type: csv
+      field-delimiter: '|'
+
+  - name: PROD_ORDERS
+    type: source-table
+    update-mode: append
+    schema:
+      - name: O_ORDERKEY
+        data-type: INTEGER
+      - name: O_CUSTKEY
+        data-type: INTEGER
+      - name: O_ORDERSTATUS
+        data-type: STRING
+      - name: O_TOTALPRICE
+        data-type: DOUBLE
+      - name: O_CURRENCY
+        data-type: STRING
+      - name: O_ORDERTIME
+        data-type: TIMESTAMP(3)
+        rowtime:
+          timestamps:
+            type: from-field
+            from: O_RAW_ORDERTIME
+          watermarks:
+            type: "periodic-bounded"
+            delay: 5000
+      - name: O_ORDERPRIORITY
+        data-type: STRING
+      - name: O_CLERK
+        data-type: STRING
+      - name: O_SHIPPRIORITY
+        data-type: INTEGER
+      - name: O_COMMENT
+        data-type: STRING
+    connector:
+      type: kafka
+      version: universal
+      topic: Orders
+      startup-mode: 'earliest-offset'
+      properties:
+        - key: zookeeper.connect
+          value: not-needed
+        - key: bootstrap.servers
+          value: kafka:9092
+        - key: group.id
+          value: testGroup
+    format:
+      type: csv
+      field-delimiter: '|'
+
+  - name: PROD_ORDERS_SINK
+    type: sink-table
+    update-mode: append
+    schema:
+      - name: O_ORDERKEY
+        data-type: INTEGER
+      - name: O_CUSTKEY
+        data-type: INTEGER
+      - name: O_ORDERSTATUS
+        data-type: STRING
+      - name: O_TOTALPRICE
+        data-type: DOUBLE
+      - name: O_CURRENCY
+        data-type: STRING
+      - name: O_ORDERTIME
+        data-type: TIMESTAMP(3)
+      - name: O_ORDERPRIORITY
+        data-type: STRING
+      - name: O_CLERK
+        data-type: STRING
+      - name: O_SHIPPRIORITY
+        data-type: INTEGER
+      - name: O_COMMENT
+        data-type: STRING
+    connector:
+      type: kafka
+      version: universal
+      topic: Orders
+      startup-mode: 'earliest-offset'
+      properties:
+        - key: zookeeper.connect
+          value: not-needed
+        - key: bootstrap.servers
+          value: kafka:9092
+        - key: group.id
+          value: testGroup
+    format:
+      type: csv
+      field-delimiter: '|'
 
 #==============================================================================
 # Execution properties

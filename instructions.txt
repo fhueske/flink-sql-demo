@@ -1,0 +1,414 @@
+1. Upload to S3
+  - customer.tbl
+  - nation.tbl
+  - region.tbl
+  - rates.tbl
+  - orders.tbl
+  - lineitem.tbl
+
+2. Prepare MySQL
+
+CREATE TABLE PROD_REGION (
+  R_REGIONKEY     INTEGER        NOT NULL,
+  R_NAME          CHAR(25)       NOT NULL,
+  R_COMMENT       VARCHAR(152)   NOT NULL
+);
+
+CREATE TABLE PROD_NATION (
+  N_NATIONKEY     INTEGER        NOT NULL,
+  N_NAME          CHAR(25)       NOT NULL,
+  N_REGIONKEY     INTEGER        NOT NULL,
+  N_COMMENT       VARCHAR(152)   NOT NULL
+);
+
+CREATE TABLE PROD_CUSTOMER (
+  C_CUSTKEY       INTEGER        NOT NULL,
+  C_NAME          VARCHAR(25)    NOT NULL,
+  C_ADDRESS       VARCHAR(40)    NOT NULL,
+  C_NATIONKEY     INTEGER        NOT NULL,
+  C_PHONE         CHAR(15)       NOT NULL,
+  C_ACCTBAL       DOUBLE         NOT NULL,
+  C_MKTSEGMENT    CHAR(10)       NOT NULL,
+  C_COMMENT       VARCHAR(117)   NOT NULL
+);
+
+CREATE TABLE PROD_RATES (
+  RS_TIMESTAMP    TIMESTAMP(3)   NOT NULL,
+  RS_SYMBOL       CHAR(3)        NOT NULL,
+  RS_RATE         DOUBLE         NOT NULL
+);
+
+INSERT INTO PROD_RATES VALUES (TIMESTAMP '2020-04-19 10:01:52.154', 'EUR', 1.0000);
+INSERT INTO PROD_RATES VALUES (TIMESTAMP '2020-04-19 10:01:52.154', 'CHF', 1.0588);
+INSERT INTO PROD_RATES VALUES (TIMESTAMP '2020-04-19 10:01:52.154', 'HKD', 8.3201);
+INSERT INTO PROD_RATES VALUES (TIMESTAMP '2020-04-19 10:01:52.154', 'JPY', 114.9208);
+INSERT INTO PROD_RATES VALUES (TIMESTAMP '2020-04-19 10:01:52.154', 'GBP', 0.9213);
+INSERT INTO PROD_RATES VALUES (TIMESTAMP '2020-04-19 10:01:52.154', 'USD', 1.1060);
+INSERT INTO PROD_RATES VALUES (TIMESTAMP '2020-04-19 10:01:52.154', 'CAD', 1.5628);
+INSERT INTO PROD_RATES VALUES (TIMESTAMP '2020-04-19 10:01:52.154', 'NOK', 10.9257);
+INSERT INTO PROD_RATES VALUES (TIMESTAMP '2020-04-19 10:01:52.154', 'RUB', 81.2930);
+INSERT INTO PROD_RATES VALUES (TIMESTAMP '2020-04-19 10:01:52.154', 'CNY', 8.0166);
+
+3. Move data into MySQL
+
+CREATE TABLE DEV_REGION (
+  R_REGIONKEY     INTEGER,
+  R_NAME          STRING,
+  R_COMMENT       STRING
+) WITH (
+  'connector.type' = 'filesystem',
+  'connector.path' = 's3://sql-demo/region.tbl',
+  'format.type' = 'csv',
+  'format.field-delimiter' = '|'
+);
+
+CREATE TABLE PROD_REGION (
+  R_REGIONKEY     INTEGER,
+  R_NAME          STRING,
+  R_COMMENT       STRING
+) WITH (
+  'connector.type' = 'jdbc',
+  'connector.url' = 'jdbc:mysql://mysql:3306/sql-demo',
+  'connector.table' = 'PROD_REGION',
+  'connector.driver' = 'com.mysql.jdbc.Driver',
+  'connector.username' = 'sql-demo',
+  'connector.password' = 'demo-sql',
+  'connector.lookup.cache.max-rows' = '1',
+  'connector.lookup.cache.ttl' = '0s'
+);
+
+INSERT INTO PROD_REGION SELECT * FROM DEV_REGION;
+
+SELECT * FROM PROD_REGION;
+
+CREATE TABLE DEV_NATION (
+  N_NATIONKEY     INTEGER,
+  N_NAME          STRING,
+  N_REGIONKEY     INTEGER,
+  N_COMMENT       STRING
+) WITH (
+  'connector.type' = 'filesystem',
+  'connector.path' = 's3://sql-demo/nation.tbl',
+  'format.type' = 'csv',
+  'format.field-delimiter' = '|'
+);
+
+CREATE TABLE PROD_NATION (
+  N_NATIONKEY     INTEGER,
+  N_NAME          STRING,
+  N_REGIONKEY     INTEGER,
+  N_COMMENT       STRING
+) WITH (
+  'connector.type' = 'jdbc',
+  'connector.url' = 'jdbc:mysql://mysql:3306/sql-demo',
+  'connector.table' = 'PROD_NATION',
+  'connector.driver' = 'com.mysql.jdbc.Driver',
+  'connector.username' = 'sql-demo',
+  'connector.password' = 'demo-sql',
+  'connector.lookup.cache.max-rows' = '1',
+  'connector.lookup.cache.ttl' = '0s'
+);
+
+INSERT INTO PROD_NATION SELECT * FROM DEV_NATION;
+
+SELECT * FROM PROD_NATION;
+
+CREATE TABLE DEV_CUSTOMER (
+  C_CUSTKEY       INTEGER,
+  C_NAME          STRING,
+  C_ADDRESS       STRING,
+  C_NATIONKEY     INTEGER,
+  C_PHONE         STRING,
+  C_ACCTBAL       DOUBLE,
+  C_MKTSEGMENT    STRING,
+  C_COMMENT       STRING
+) WITH (
+  'connector.type' = 'filesystem',
+  'connector.path' = 's3://sql-demo/customer.tbl',
+  'format.type' = 'csv',
+  'format.field-delimiter' = '|'
+);
+
+CREATE TABLE PROD_CUSTOMER (
+  C_CUSTKEY       INTEGER,
+  C_NAME          STRING,
+  C_ADDRESS       STRING,
+  C_NATIONKEY     INTEGER,
+  C_PHONE         STRING,
+  C_ACCTBAL       DOUBLE,
+  C_MKTSEGMENT    STRING,
+  C_COMMENT       STRING
+) WITH (
+  'connector.type' = 'jdbc',
+  'connector.url' = 'jdbc:mysql://mysql:3306/sql-demo',
+  'connector.table' = 'PROD_CUSTOMER',
+  'connector.driver' = 'com.mysql.jdbc.Driver',
+  'connector.username' = 'sql-demo',
+  'connector.password' = 'demo-sql',
+  'connector.lookup.cache.max-rows' = '1',
+  'connector.lookup.cache.ttl' = '0s'
+);
+
+INSERT INTO PROD_CUSTOMER SELECT * FROM DEV_CUSTOMER;
+
+SELECT * FROM PROD_CUSTOMER;
+
+CREATE TABLE DEV_RATES (
+  RS_TIMESTAMP    TIMESTAMP(3),
+  RS_SYMBOL       STRING,
+  RS_RATE         DOUBLE
+) WITH (
+  'connector.type' = 'filesystem',
+  'connector.path' = 's3://sql-demo/rates.tbl',
+  'format.type' = 'csv',
+  'format.field-delimiter' = '|'
+);
+
+
+INSERT INTO PROD_RATES_HISTORY_SINK SELECT * FROM DEV_RATES;
+
+CREATE TABLE PROD_RATES (
+  RS_TIMESTAMP    TIMESTAMP(3),
+  RS_SYMBOL       STRING,
+  RS_RATE         DOUBLE
+) WITH (
+  'connector.type' = 'jdbc',
+  'connector.url' = 'jdbc:mysql://mysql:3306/sql-demo',
+  'connector.table' = 'PROD_RATES',
+  'connector.driver' = 'com.mysql.jdbc.Driver',
+  'connector.username' = 'sql-demo',
+  'connector.password' = 'demo-sql',
+  'connector.lookup.cache.max-rows' = '1',
+  'connector.lookup.cache.ttl' = '0s'
+);
+
+SELECT * FROM PROD_RATES;
+
+3. Run window query
+
+CREATE TABLE DEV_ORDERS (
+  O_ORDERKEY      INTEGER,
+  O_CUSTKEY       INTEGER,
+  O_ORDERSTATUS   STRING,
+  O_TOTALPRICE    DOUBLE,
+  O_CURRENCY      STRING,
+  O_ORDERTIME     TIMESTAMP(3),
+  O_ORDERPRIORITY STRING,
+  O_CLERK         STRING, 
+  O_SHIPPRIORITY  INTEGER,
+  O_COMMENT       STRING,
+  WATERMARK FOR O_ORDERTIME AS O_ORDERTIME - INTERVAL '5' MINUTE
+) WITH (
+  'connector.type' = 'filesystem',
+  'connector.path' = 's3://sql-demo/orders.tbl',
+  'format.type' = 'csv',
+  'format.field-delimiter' = '|'
+);
+
+CREATE TABLE PROD_ORDERS (
+  O_ORDERKEY      INTEGER,
+  O_CUSTKEY       INTEGER,
+  O_ORDERSTATUS   STRING,
+  O_TOTALPRICE    DOUBLE,
+  O_CURRENCY      STRING,
+  O_ORDERTIME     TIMESTAMP(3),
+  O_ORDERPRIORITY STRING,
+  O_CLERK         STRING,
+  O_SHIPPRIORITY  INTEGER,
+  O_COMMENT       STRING,
+  WATERMARK FOR O_ORDERTIME AS O_ORDERTIME - INTERVAL '5' MINUTE
+) WITH (
+  'connector.type' = 'kafka',
+  'connector.version' = 'universal',
+  'connector.topic' = 'Orders',
+  'connector.properties.zookeeper.connect' = 'not-needed',
+  'connector.properties.bootstrap.servers' = 'kafka:9092',
+  'connector.startup-mode' = 'earliest-offset',
+  'format.type' = 'csv',
+  'format.field-delimiter' = '|'
+);
+
+SET execution.type=batch;
+
+// revenue per currency and hour
+SELECT
+  CEIL(O_ORDERTIME TO HOUR) AS `HOUR`,
+  O_CURRENCY AS `CURRENCY`,
+  SUM(O_TOTALPRICE) AS `REVENUE`
+FROM DEV_ORDERS
+GROUP BY
+  O_CURRENCY,
+  CEIL(O_ORDERTIME TO HOUR);
+
+SELECT
+  TUMBLE_END(O_ORDERTIME, INTERVAL '1' HOUR) AS `HOUR`,
+  O_CURRENCY AS `CURRENCY`,
+  SUM(O_TOTALPRICE) AS `REVENUE`
+FROM DEV_ORDERS
+GROUP BY
+  O_CURRENCY,
+  TUMBLE(O_ORDERTIME, INTERVAL '1' HOUR);
+
+SET execution.type=streaming;
+
+3. Run different kind of joins
+
+INSERT INTO PROD_ORDERS SELECT * FROM DEV_ORDERS;
+
+SELECT * FROM PROD_ORDERS;
+
+CREATE TABLE DEV_LINEITEM (
+  L_ORDERKEY       INTEGER,
+  L_PARTKEY        INTEGER,
+  L_SUPPKEY        INTEGER,
+  L_LINENUMBER     INTEGER,
+  L_QUANTITY       DOUBLE,
+  L_EXTENDEDPRICE  DOUBLE,
+  L_DISCOUNT       DOUBLE,
+  L_TAX            DOUBLE,
+  L_CURRENCY       STRING,
+  L_RETURNFLAG     STRING,
+  L_LINESTATUS     STRING,
+  L_ORDERTIME      TIMESTAMP(3),
+  L_SHIPINSTRUCT   STRING,
+  L_SHIPMODE       STRING,
+  L_COMMENT        STRING
+) WITH (
+  'connector.type' = 'filesystem',
+  'connector.path' = 's3://sql-demo/lineitem.tbl',
+  'format.type' = 'csv',
+  'format.field-delimiter' = '|'
+);
+
+CREATE TABLE PROD_LINEITEM (
+  L_ORDERKEY       INTEGER,
+  L_PARTKEY        INTEGER,
+  L_SUPPKEY        INTEGER,
+  L_LINENUMBER     INTEGER,
+  L_QUANTITY       DOUBLE,
+  L_EXTENDEDPRICE  DOUBLE,
+  L_DISCOUNT       DOUBLE,
+  L_TAX            DOUBLE,
+  L_CURRENCY       STRING,
+  L_RETURNFLAG     STRING,
+  L_LINESTATUS     STRING,
+  L_ORDERTIME      TIMESTAMP(3),
+  L_SHIPINSTRUCT   STRING,
+  L_SHIPMODE       STRING,
+  L_COMMENT        STRING,
+  WATERMARK FOR L_ORDERTIME AS L_ORDERTIME - INTERVAL '5' MINUTE,
+  L_PROCTIME       AS PROCTIME()
+) WITH (
+  'connector.type' = 'kafka',
+  'connector.version' = 'universal',
+  'connector.topic' = 'Lineitem',
+  'connector.properties.zookeeper.connect' = 'not-needed',
+  'connector.properties.bootstrap.servers' = 'kafka:9092',
+  'connector.startup-mode' = 'earliest-offset',
+  'format.type' = 'csv',
+  'format.field-delimiter' = '|'
+);
+
+INSERT INTO PROD_LINEITEM SELECT * FROM DEV_LINEITEM;
+
+SELECT * FROM PROD_LINEITEM;
+
+// batch join for day reporting
+// show customers and their orders by region and priority
+SELECT
+  R_NAME AS `REGION`,
+  O_ORDERPRIORITY AS `PRIORITY`,
+  COUNT(DISTINCT C_CUSTKEY) AS `NUMBER_OF_CUSTOMERS`,
+  COUNT(O_ORDERKEY) AS `NUMBER_OF_ORDERS`
+FROM DEV_ORDERS
+JOIN PROD_CUSTOMER ON O_CUSTKEY = C_CUSTKEY
+JOIN PROD_NATION ON C_NATIONKEY = N_NATIONKEY
+JOIN PROD_REGION ON N_REGIONKEY = R_REGIONKEY
+WHERE
+  FLOOR(O_ORDERTIME TO DAY) = TIMESTAMP '2020-04-17 0:00:00.000'
+  AND NOT O_ORDERPRIORITY = '4-NOT SPECIFIED'
+GROUP BY R_NAME, O_ORDERPRIORITY
+ORDER BY R_NAME, O_ORDERPRIORITY; // remove this and we can execute it in streaming
+
+// stream join
+// show open lineitems with urgent order priority
+SELECT
+  O_ORDERTIME AS `ORDERTIME`,
+  O_ORDERKEY AS `ORDER`,
+  L_LINENUMBER AS `LINENUMBER`,
+  L_PARTKEY AS `PART`,
+  L_SUPPKEY AS `SUPPLIER`,
+  L_QUANTITY AS `QUANTITY`
+FROM PROD_LINEITEM
+JOIN PROD_ORDERS ON O_ORDERKEY = L_ORDERKEY
+WHERE
+  L_ORDERTIME BETWEEN O_ORDERTIME - INTERVAL '5' MINUTE AND O_ORDERTIME AND
+  L_LINESTATUS = 'O' AND
+  O_ORDERPRIORITY = '1-URGENT';
+
+// enrichment join with lookup for rates
+// show open lineitems with approximately revenue in Euro
+SELECT
+  L_PROCTIME AS `QUERYTIME`,
+  L_ORDERKEY AS `ORDER`,
+  L_LINENUMBER AS `LINENUMBER`,
+  (L_EXTENDEDPRICE * (1 - L_DISCOUNT) * (1 + L_TAX)) / RS_RATE AS `OPEN IN EURO`
+FROM PROD_LINEITEM
+JOIN PROD_RATES FOR SYSTEM_TIME AS OF L_PROCTIME ON RS_SYMBOL = L_CURRENCY
+WHERE
+  L_LINESTATUS = 'O';
+
+// enrichment join with temporal table for rates
+// show open lineitems with correct revenue in Euro
+SELECT
+  L_ORDERTIME AS `ORDERTIME`,
+  L_ORDERKEY AS `ORDER`,
+  L_LINENUMBER AS `LINENUMBER`,
+  (L_EXTENDEDPRICE * (1 - L_DISCOUNT) * (1 + L_TAX)) / RS_RATE AS `OPEN IN EURO`
+FROM
+  PROD_LINEITEM,
+  LATERAL TABLE(PROD_RATES_TEMPORAL(L_ORDERTIME))
+WHERE RS_SYMBOL = L_CURRENCY AND
+  L_LINESTATUS = 'O';
+
+// MATCH_RECOGNIZE
+// change in ship instruct behavior
+CREATE VIEW LINEITEM_WITH_CUSTOMER AS
+SELECT * FROM (
+  SELECT
+    O_CUSTKEY AS `CUSTKEY`,
+    L_ORDERKEY AS `ORDERKEY`,
+    L_LINENUMBER AS `LINENUMBER`,
+    L_ORDERTIME AS `ORDERTIME`,
+    L_SHIPINSTRUCT AS `SHIPINSTRUCT`
+  FROM PROD_LINEITEM
+  JOIN PROD_ORDERS ON O_ORDERKEY = L_ORDERKEY
+  WHERE
+    L_ORDERTIME BETWEEN O_ORDERTIME - INTERVAL '5' MINUTE AND O_ORDERTIME
+);
+
+SELECT *
+FROM LINEITEM_WITH_CUSTOMER
+MATCH_RECOGNIZE(
+  PARTITION BY CUSTKEY
+  ORDER BY ORDERTIME
+  MEASURES
+    COUNT(OTHER.ORDERKEY) AS `LAST REGULAR SHIPINGS`,
+    LAST(OTHER.ORDERKEY) AS `LAST REGULAR ORDER`,
+    LAST(OTHER.LINENUMBER) AS `LAST REGULAR LINENUMBER`,
+    COD.ORDERKEY AS `COD ORDER`,
+    COD.LINENUMBER AS `COD LINENUMBER`
+  PATTERN (OTHER{15,} COD)
+  DEFINE
+    OTHER AS NOT SHIPINSTRUCT = 'COLLECT COD',
+    COD AS SHIPINSTRUCT = 'COLLECT COD'
+);
+
+
+// items per hour and customer distribution
+CREATE VIEW CUSTOMER_ITEMS_PER_HOUR AS
+  SELECT CUSTKEY, COUNT(*) AS ITEMS_PER_HOUR
+  FROM LINEITEM_WITH_CUSTOMER
+  GROUP BY CUSTKEY, TUMBLE(ORDERTIME, INTERVAL '1' HOUR);
+
+SELECT ITEMS_PER_HOUR, COUNT(*) FROM CUSTOMER_ITEMS_PER_HOUR GROUP BY ITEMS_PER_HOUR
