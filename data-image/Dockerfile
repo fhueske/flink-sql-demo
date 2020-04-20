@@ -43,14 +43,6 @@ RUN mkdir -p /opt/data; \
     mkdir -p /opt/data/minio; \
     mkdir -p /opt/data/kafka;
 
-# Copy Minio data files
-COPY ./data/*.tbl /opt/data/minio/
-
-# Link Kafka data files
-RUN ln -s /opt/data/minio/lineitem.tbl /opt/data/kafka/lineitem.tbl; \
-    ln -s /opt/data/minio/orders.tbl /opt/data/kafka/orders.tbl; \
-    ln -s /opt/data/minio/rates.tbl /opt/data/kafka/rates.tbl;
-
 # get mc and configure (minio client)
 RUN cd /opt; \
     wget https://dl.min.io/client/mc/release/linux-amd64/mc; \

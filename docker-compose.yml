@@ -26,6 +26,9 @@ services:
       - MC_HOST_minio=http://sql-demo:demo-sql@minio:9000
       - KAFKA_HOST=kafka:9092
       - SPEEDUP=10.0
+    volumes:
+      - ./data:/opt/data/kafka
+#      -./data:/opt/data/minio  # all files located in /opt/data/minio are copied into Minio
     depends_on:
       - minio
       - kafka
@@ -58,6 +61,8 @@ services:
     build: ./metastore-image
     expose:
       - "9083"
+    ports:
+      - "9083:9083"
   minio:
     image: minio/minio:latest
     entrypoint: sh
@@ -89,7 +94,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
   mysql:
     image: mysql:8.0.19
-    command: --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=mysql_native_password --secure_file_priv=/data
     environment:
       MYSQL_USER: "sql-demo"
       MYSQL_PASSWORD: "demo-sql"
@@ -97,4 +102,5 @@ services:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
     volumes:
       - ./mysql-init:/docker-entrypoint-initdb.d
+      - ./data:/data
 
