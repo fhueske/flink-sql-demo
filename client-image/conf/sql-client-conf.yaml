@@ -66,32 +66,6 @@ tables:
       type: csv
       field-delimiter: '|'
 
-  - name: prod_rates_history_sink
-    type: sink-table
-    update-mode: append
-    schema:
-      - name: rs_timestamp
-        data-type: TIMESTAMP(3)
-      - name: rs_symbol
-        data-type: STRING
-      - name: rs_rate
-        data-type: DOUBLE
-    connector:
-      type: kafka
-      version: universal
-      topic: rates
-      startup-mode: earliest-offset
-      properties:
-        - key: zookeeper.connect
-          value: not-needed
-        - key: bootstrap.servers
-          value: kafka:9092
-        - key: group.id
-          value: testGroup
-    format:
-      type: csv
-      field-delimiter: '|'
-
   - name: prod_rates_temporal
     type: temporal-table
     history-table: prod_rates_history
@@ -158,56 +132,6 @@ tables:
       type: csv
       field-delimiter: '|'
 
-  - name: prod_lineitem_sink
-    type: sink-table
-    update-mode: append
-    schema:
-      - name: l_orderkey
-        data-type: INTEGER
-      - name: l_partkey
-        data-type: INTEGER
-      - name: l_suppkey
-        data-type: INTEGER
-      - name: l_linenumber
-        data-type: INTEGER
-      - name: l_quantity
-        data-type: DOUBLE
-      - name: l_extendedprice
-        data-type: DOUBLE
-      - name: l_discount
-        data-type: DOUBLE
-      - name: l_tax
-        data-type: DOUBLE
-      - name: l_currency
-        data-type: STRING
-      - name: l_returnflag
-        data-type: STRING
-      - name: l_linestatus
-        data-type: STRING
-      - name: l_ordertime
-        data-type: TIMESTAMP(3)
-      - name: l_shipinstruct
-        data-type: STRING
-      - name: l_shipmode
-        data-type: STRING
-      - name: l_comment
-        data-type: STRING
-    connector:
-      type: kafka
-      version: universal
-      topic: lineitem
-      startup-mode: 'earliest-offset'
-      properties:
-        - key: zookeeper.connect
-          value: not-needed
-        - key: bootstrap.servers
-          value: kafka:9092
-        - key: group.id
-          value: testGroup
-    format:
-      type: csv
-      field-delimiter: '|'
-
   - name: prod_orders
     type: source-table
     update-mode: append
@@ -231,46 +155,6 @@ tables:
           watermarks:
             type: "periodic-bounded"
             delay: 5000
-      - name: o_orderpriority
-        data-type: STRING
-      - name: o_clerk
-        data-type: STRING
-      - name: o_shippriority
-        data-type: INTEGER
-      - name: o_comment
-        data-type: STRING
-    connector:
-      type: kafka
-      version: universal
-      topic: orders
-      startup-mode: 'earliest-offset'
-      properties:
-        - key: zookeeper.connect
-          value: not-needed
-        - key: bootstrap.servers
-          value: kafka:9092
-        - key: group.id
-          value: testGroup
-    format:
-      type: csv
-      field-delimiter: '|'
-
-  - name: prod_orders_sink
-    type: sink-table
-    update-mode: append
-    schema:
-      - name: o_orderkey
-        data-type: INTEGER
-      - name: o_custkey
-        data-type: INTEGER
-      - name: o_orderstatus
-        data-type: STRING
-      - name: o_totalprice
-        data-type: DOUBLE
-      - name: o_currency
-        data-type: STRING
-      - name: o_ordertime
-        data-type: TIMESTAMP(3)
       - name: o_orderpriority
         data-type: STRING
       - name: o_clerk
