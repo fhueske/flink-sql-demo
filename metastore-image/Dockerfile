@@ -40,12 +40,7 @@ RUN cd /opt && \
 
 COPY hive-conf/hive-site.xml /opt/apache-hive-2.3.6-bin/conf
 
-# Copy metastore_db backup file and restore it
-COPY ./metastore_db_backup.tar /
-RUN cd /; \
-    tar xf /metastore_db_backup.tar; \
-    rm /metastore_db_backup.tar;
-    
+
 ENV HADOOP_HOME /opt/hadoop-2.9.2
 ENV DERBY_INSTALL /opt/db-derby-10.10.2.0-bin
 ENV DERBY_HOME /opt/db-derby-10.10.2.0-bin
