@@ -15,6 +15,10 @@ services:
       ZOOKEEPER_CONNECT: zookeeper
       KAFKA_BOOTSTRAP: kafka
       MYSQL_HOST: mysql
+      METASTORE_HOST: metastore
+      METASTORE_PORT: 9083
+    volumes:
+      - ./flinksql-init:/opt/sql-client/init
   data-provider:
     image: fhueske/flink-sql-demo-data:1
     build: ./data-image
@@ -92,5 +96,5 @@ services:
       MYSQL_DATABASE: "sql-demo"
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
     volumes:
-      - ./mysql:/docker-entrypoint-initdb.d
+      - ./mysql-init:/docker-entrypoint-initdb.d
 

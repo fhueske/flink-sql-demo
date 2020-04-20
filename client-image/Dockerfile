@@ -62,4 +62,5 @@ COPY hive-conf /opt/hive-conf
 WORKDIR /opt/sql-client
 ENV SQL_CLIENT_HOME /opt/sql-client
 
-ENTRYPOINT ["tail", "-f", "/dev/null"]
+COPY docker-entrypoint.sh /
+ENTRYPOINT ["/docker-entrypoint.sh"]
