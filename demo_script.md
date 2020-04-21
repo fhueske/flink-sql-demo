@@ -2,7 +2,7 @@
 
 * What do we show in this demo
   * Flink SQL processing data from different storage systems
-  * Flink SQL using HCatalog as an external, persistent catalog
+  * Flink SQL using Hive Metastore as an external, persistent catalog
   * Batch/Stream unification of queries in action
   * Different ways to join dynamic data
   * Creating Tables with DDL
@@ -90,7 +90,7 @@ SELECT * FROM prod_orders;
 All static (MySQL-backed) tables are in the Hive catalog:
 
 ```
-USE CATALOG hcat;
+USE CATALOG hive;
 SHOW TABLES;
 DESCRIBE prod_nation;
 SELECT * FROM prod_nation;
@@ -314,7 +314,7 @@ SELECT
   rs_rate AS `cur_rate`, 
   (l_extendedprice * (1 - l_discount) * (1 + l_tax)) / rs_rate AS `open in euro`
 FROM prod_lineitem
-JOIN hcat.`default`.prod_rates FOR SYSTEM_TIME AS OF l_proctime ON rs_symbol = l_currency
+JOIN hive.`default`.prod_rates FOR SYSTEM_TIME AS OF l_proctime ON rs_symbol = l_currency
 WHERE
   l_linestatus = 'O' AND
   l_currency = 'USD';
@@ -475,7 +475,7 @@ docker-compose exec kafka kafka-console-consumer.sh --bootstrap-server kafka:909
 * We would like to store and mainain the result of the following query in MySQL.
 
 ```
-USE CATALOG hcat;
+USE CATALOG hive;
 ```
 
 ```
