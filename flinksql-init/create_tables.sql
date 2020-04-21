@@ -1,4 +1,4 @@
-USE CATALOG hcat;
+USE CATALOG hive;
 
 CREATE TABLE prod_region (
   r_regionkey     INTEGER,

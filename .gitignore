@@ -1,5 +1,5 @@
 **/target
 **/dependency-reduced-pom.xml
 **/.idea
-data-image/data/*.tbl
-data-image/data/*.zip
+/data/*.tbl
+/data/*.zip

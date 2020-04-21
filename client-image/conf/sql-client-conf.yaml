@@ -26,7 +26,7 @@
 # Define table sources here. See the Table API & SQL documentation for details.
 
 catalogs:
-   - name: hcat
+   - name: hive
      type: hive
      property-version: 1
      hive-version: 2.3.6
