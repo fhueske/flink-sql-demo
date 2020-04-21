@@ -2,7 +2,7 @@
 
 * What do we show in this demo
   * Flink SQL processing data from different storage systems
-  * Flink SQL using HCatalog as an external, persistent catalog
+  * Flink SQL using Hive Metastore as an external, persistent catalog
   * Batch/Stream unification of queries in action
   * Different ways to join dynamic data
   * Creating Tables with DDL
@@ -17,9 +17,23 @@
   * region: denormalized region data
   * rates: exchange rates for currencies
 
-Depending on their update characteristic (frequency, append-only) tables are stored in different systems:
+Depending on their update characteristic (frequency, insert-only) tables are stored in different systems:
 * Kafka: orders, linetimes, rates
 * MySQL: customer, nation, region
+
+# Prepare the Data
+
+Please download the TPCH demo data from Google Drive and extract the zip archive into the `./data` folder (as `./data/*.tbl`).
+
+https://drive.google.com/file/d/15LWUBGZenWaW3R_WNxqvcTQOuA_Kgtjv
+
+The folder will be mounted by the Docker containers.
+
+# Build the Docker Images
+
+```
+docker-compose build
+```
 
 # Start the Docker Environment
 
@@ -57,12 +71,12 @@ quit;
 ## Minio (S3-compatible Storage)
 
 * No files here yet
-	* Show in WebUI: http://localhost:9000
+* Show in Web UI: http://localhost:9000 (user: `sql-demo`, password: `demo-sql`)
 
 ## Flink JobManager and TaskManager
 
 * Queries are executed on a FLink cluster
-* Show WebUI: http://localhost:8081
+* Show Web UI: http://localhost:8081
 
 ## SQL client + Hive Metastore
 
@@ -90,7 +104,7 @@ SELECT * FROM prod_orders;
 All static (MySQL-backed) tables are in the Hive catalog:
 
 ```
-USE CATALOG hcat;
+USE CATALOG hive;
 SHOW TABLES;
 DESCRIBE prod_nation;
 SELECT * FROM prod_nation;
@@ -133,8 +147,11 @@ INSERT INTO dev_orders SELECT * FROM default_catalog.default_database.prod_order
 ```
 
 * Go to Flink UI and show number of processed records.
+
 * Manually cancel the job
+
 * Show file in Minio: http://localhost:9000
+
 * Show data in SQL client
 
 ```
@@ -162,6 +179,25 @@ FROM dev_orders
 GROUP BY
   o_currency,
   CEIL(o_ordertime TO MINUTE);
+```
+
+* Run the same in streaming
+
+```
+SET execution.type=streaming;
+```
+
+* Show why we should streamify the query
+
+```
+SET execution.result-mode=changelog;
+```
+
+* Reset to previous settings
+
+```
+SET execution.result-mode=table;
+SET execution.type=batch;
 ```
 
 * We can streamify the query a bit with a TUMBLE window
@@ -237,7 +273,6 @@ ORDER BY r_name, o_orderpriority;
 ### Regular Join on Dynamic Tables
 
 * We can run the same query on the `prod_orders` table 
-
 * Change `dev_orders` to `prod_orders`
 * Remove `ORDER BY` clause
 
@@ -312,12 +347,11 @@ SELECT
   l_linenumber AS `linenumber`,
   l_currency AS `currency`,
   rs_rate AS `cur_rate`, 
-  (l_extendedprice * (1 - l_discount) * (1 + l_tax)) / rs_rate AS `open in euro`
+  (l_extendedprice * (1 - l_discount) * (1 + l_tax)) / rs_rate AS `open_in_euro`
 FROM prod_lineitem
-JOIN hcat.`default`.prod_rates FOR SYSTEM_TIME AS OF l_proctime ON rs_symbol = l_currency
+JOIN hive.`default`.prod_rates FOR SYSTEM_TIME AS OF l_proctime ON rs_symbol = l_currency
 WHERE
-  l_linestatus = 'O' AND
-  l_currency = 'USD';
+  l_linestatus = 'O';
 ```
 
 * Check `PROD_RATES` table in MySQL and update a rate
@@ -325,7 +359,7 @@ WHERE
 ```
 docker-compose exec mysql mysql -Dsql-demo -usql-demo -pdemo-sql
 SELECT * FROM PROD_RATES;
-UPDATE PROD_RATES SET RS_TIMESTAMP = '2020-04-20 10:00:00.000', RS_RATE = 1.234 WHERE RS_SYMBOL='USD';
+UPDATE PROD_RATES SET RS_TIMESTAMP = '2020-04-01 01:00:00.000', RS_RATE = 1.234 WHERE RS_SYMBOL='USD';
 ```
 
 * Notable properties of the join
@@ -346,7 +380,7 @@ SELECT
   l_linenumber AS `linenumber`,
   l_currency AS `currency`,
   rs_rate AS `cur_rate`, 
-  (l_extendedprice * (1 - l_discount) * (1 + l_tax)) / rs_rate AS `open in euro`
+  (l_extendedprice * (1 - l_discount) * (1 + l_tax)) / rs_rate AS `open_in_euro`
 FROM
   prod_lineitem,
   LATERAL TABLE(prod_rates_temporal(l_ordertime))
@@ -365,7 +399,9 @@ WHERE rs_symbol = l_currency AND
 * The combination of MATCH RECOGNIZE and dynamic tables is very powerful
 * Flink supports MATCH RECOGNIZE since several releases
 
-* **TODO: Describe use case of query**
+* Find customers that have changed their delivery behavior.
+  * Search for a pattern where the last x lineitems had regular shippings
+  * But now the customer whats to pay on delivery (collect on delivery = CoD)
 
 ```
 CREATE VIEW lineitem_with_customer AS
@@ -475,7 +511,7 @@ docker-compose exec kafka kafka-console-consumer.sh --bootstrap-server kafka:909
 * We would like to store and mainain the result of the following query in MySQL.
 
 ```
-USE CATALOG hcat;
+USE CATALOG hive;
 ```
 
 ```
@@ -564,8 +600,6 @@ SELECT * FROM REGION_STATS ORDER BY hour_of_day, region;
 
 # TODOs
 
-
-* Add description for MATCH RECOGNIZE query
 
 # Issues
 
