@@ -471,7 +471,8 @@ CREATE TABLE minute_stats (
   `minute` TIMESTAMP(3),
   `currency` STRING,
   `revenueSum` DOUBLE,
-  `orderCnt` BIGINT
+  `orderCnt` BIGINT,
+  WATERMARK FOR `minute` AS `minute` - INTERVAL '10' SECOND
 ) WITH (
   'connector.type' = 'kafka',       
   'connector.version' = 'universal',
