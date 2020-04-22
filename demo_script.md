@@ -594,22 +594,3 @@ docker-compose exec mysql mysql -Dsql-demo -usql-demo -pdemo-sql
 
 SELECT * FROM REGION_STATS ORDER BY hour_of_day, region;
 ```
-
-# Outlook
-
-
-
-# TODOs
-
-
-# Issues
-
-* Why are queries canceled by the client shown as failed in the Flink UI?
-
-* Metaspace error when executing a query.
-	[ERROR] Could not execute SQL statement. Reason:
-	java.lang.OutOfMemoryError: Metaspace
-
---> "Fixed" by `docker-compose restart jobmanager taskmanager`
-
-* Not all queries are cancelled in Flink if they are stopped in the client
