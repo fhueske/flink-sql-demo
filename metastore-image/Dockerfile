@@ -20,9 +20,9 @@ FROM openjdk:8-jre
 
 # Copy binary distributions from Apache servers/mirrors
 RUN cd /opt && \
-    wget http://apache.lauf-forum.at/hadoop/common/hadoop-2.9.2/hadoop-2.9.2.tar.gz && \
+    wget https://archive.apache.org/dist/hadoop/common/hadoop-2.9.2/hadoop-2.9.2.tar.gz && \
     wget http://archive.apache.org/dist/db/derby/db-derby-10.10.2.0/db-derby-10.10.2.0-bin.tar.gz && \
-    wget http://apache.lauf-forum.at/hive/hive-2.3.6/apache-hive-2.3.6-bin.tar.gz
+    wget https://archive.apache.org/dist/hive/hive-2.3.6/apache-hive-2.3.6-bin.tar.gz
 
 # Install Hadoop
 RUN cd /opt && \
