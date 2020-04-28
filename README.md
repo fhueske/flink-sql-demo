@@ -68,6 +68,10 @@ SELECT * FROM PROD_CUSTOMER LIMIT 10;
 quit;
 ```
 
+## Grafana
+
+* Visualization tool
+
 ## Minio (S3-compatible Storage)
 
 * No files here yet
@@ -532,19 +536,6 @@ GROUP BY
   HOUR(o_ordertime);
 ```
 
-* Create a backing table in MySQL
-
-```
-docker-compose exec mysql mysql -Dsql-demo -usql-demo -pdemo-sql
-
-CREATE TABLE REGION_STATS (
-  region VARCHAR(20) NOT NULL,
-  hour_of_day BIGINT NOT NULL,
-  number_of_customers BIGINT NOT NULL,
-  number_of_orders BIGINT NOT NULL,
-  PRIMARY KEY (region, hour_of_day));
-```
-
 * Create a table in Flink
 
 ```
@@ -587,10 +578,13 @@ GROUP BY
   HOUR(o_ordertime);
 ```
 
-* Monitor query result in MySQL
+* Monitor query result in Grafana
+* Go to dashboard region stats and set refresh rate to 1s
 
 ```
-docker-compose exec mysql mysql -Dsql-demo -usql-demo -pdemo-sql
+localhost:3000
 
-SELECT * FROM REGION_STATS ORDER BY hour_of_day, region;
+user: admin
+password: admin
+
 ```
