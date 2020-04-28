@@ -107,6 +107,9 @@ services:
       image: grafana/grafana
       ports: 
           - "3000:3000"
+      depends_on:
+          - mysql
       volumes:
           - ./grafana/provisioning/:/etc/grafana/provisioning/
           - ./grafana/dashboard.json:/etc/grafana/dashboard.json
+          - ./grafana/grafana.ini:/etc/grafana/grafana.ini

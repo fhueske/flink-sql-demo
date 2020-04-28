@@ -1,11 +1,5 @@
 apiVersion: 1
 
-auth:
-    disable_login_form: true
-    anonymous:
-        enabled: true
-        org_role: Editor
-
 datasources:
    - orgId: 1
      version: 3
