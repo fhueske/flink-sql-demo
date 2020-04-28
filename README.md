@@ -68,15 +68,19 @@ SELECT * FROM PROD_CUSTOMER LIMIT 10;
 quit;
 ```
 
+## Grafana
+
+* Visualization tool
+
 ## Minio (S3-compatible Storage)
 
 * No files here yet
-* Show in Web UI: http://localhost:9000 (user: `sql-demo`, password: `demo-sql`)
+* Show in Web UI: [http://localhost:9000](http://localhost:9000) (user: `sql-demo`, password: `demo-sql`)
 
 ## Flink JobManager and TaskManager
 
 * Queries are executed on a FLink cluster
-* Show Web UI: http://localhost:8081
+* Show Web UI: [http://localhost:8081](http://localhost:8081)
 
 ## SQL client + Hive Metastore
 
@@ -150,7 +154,7 @@ INSERT INTO dev_orders SELECT * FROM default_catalog.default_database.prod_order
 
 * Manually cancel the job
 
-* Show file in Minio: http://localhost:9000
+* Show file in Minio: [http://localhost:9000](http://localhost:9000)
 
 * Show data in SQL client
 
@@ -532,19 +536,6 @@ GROUP BY
   HOUR(o_ordertime);
 ```
 
-* Create a backing table in MySQL
-
-```
-docker-compose exec mysql mysql -Dsql-demo -usql-demo -pdemo-sql
-
-CREATE TABLE REGION_STATS (
-  region VARCHAR(20) NOT NULL,
-  hour_of_day BIGINT NOT NULL,
-  number_of_customers BIGINT NOT NULL,
-  number_of_orders BIGINT NOT NULL,
-  PRIMARY KEY (region, hour_of_day));
-```
-
 * Create a table in Flink
 
 ```
@@ -587,10 +578,6 @@ GROUP BY
   HOUR(o_ordertime);
 ```
 
-* Monitor query result in MySQL
+* Monitor query result in Grafana: [http://localhost:3000](http://localhost:3000)
+* Go to dashboard region stats and set refresh rate to 1s
 
-```
-docker-compose exec mysql mysql -Dsql-demo -usql-demo -pdemo-sql
-
-SELECT * FROM REGION_STATS ORDER BY hour_of_day, region;
-```

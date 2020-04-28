@@ -103,4 +103,13 @@ services:
     volumes:
       - ./mysql-init:/docker-entrypoint-initdb.d
       - ./data:/data
-
+  grafana:
+      image: grafana/grafana
+      ports: 
+          - "3000:3000"
+      depends_on:
+          - mysql
+      volumes:
+          - ./grafana-init/provisioning/:/etc/grafana/provisioning/
+          - ./grafana-init/dashboard.json:/etc/grafana/dashboard.json
+          - ./grafana-init/grafana.ini:/etc/grafana/grafana.ini
