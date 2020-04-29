@@ -6,24 +6,25 @@
   * Batch/Stream unification of queries in action
   * Different ways to join dynamic data
   * Creating Tables with DDL
+  * Maintaining materialize views with continuous SQL queries in Kafka and MySQL
 
 * Scenario is an online store receiving orders.
-
 * The order system consists of six tables (derived from the well-known TPC-H benchmark)
-  * orders: one row for each order
-  * lineitem: individual items of an order
-  * customer: customer data
-  * nation: denormalized nation data
-  * region: denormalized region data
-  * rates: exchange rates for currencies
+  * `PROD_ORDERS` one row for each order
+  * `PROD_LINEITEM`: individual items of an order
+  * `PROD_CUSTOMER`: customer data
+  * `PROD_NATION`: denormalized nation data
+  * `PROD_REGION`: denormalized region data
+  * `PROD_RATES`: exchange rates for currencies
+  * `PROD_RATES_HISTORY`: history of all currency exchange rates
 
 Depending on their update characteristic (frequency, insert-only) tables are stored in different systems:
-* Kafka: orders, linetimes, rates
-* MySQL: customer, nation, region
+* Kafka: `PROD_ORDERS`, `PROD_LINEITEM`, `PROD_RATES_HISTORY`
+* MySQL: `PROD_CUSTOMER`, `PROD_NATION`, `PROD_REGION`, `PROD_RATES`
 
-# Prepare the Data
+# Get the Data
 
-Please download the TPCH demo data from Google Drive and extract the zip archive into the `./data` folder (as `./data/*.tbl`).
+Please download the demo data from Google Drive and extract the zip archive into the `./data` folder (as `./data/*.tbl`).
 
 https://drive.google.com/file/d/15LWUBGZenWaW3R_WNxqvcTQOuA_Kgtjv
 
@@ -70,7 +71,7 @@ quit;
 
 ## Grafana
 
-* Visualization tool
+* Dashboard tool: [http://localhost:3000](http://localhost:3000)
 
 ## Minio (S3-compatible Storage)
 
@@ -124,6 +125,10 @@ SELECT * FROM prod_nation;
 * Create a table backed by a file in S3.
 
 ```
+USE CATALOG hive;
+```
+
+```
 CREATE TABLE dev_orders (
   o_orderkey      INTEGER,
   o_custkey       INTEGER,
@@ -150,12 +155,9 @@ CREATE TABLE dev_orders (
 INSERT INTO dev_orders SELECT * FROM default_catalog.default_database.prod_orders;
 ```
 
-* Go to Flink UI and show number of processed records.
-
+* Show running job in Flink Web UI [http://localhost:8081](http://localhost:8081)
 * Manually cancel the job
-
 * Show file in Minio: [http://localhost:9000](http://localhost:9000)
-
 * Show data in SQL client
 
 ```
@@ -165,7 +167,7 @@ SELECT COUNT(*) AS rowCnt FROM dev_orders;
 
 ### Run a Query on the Snapshotted Data
 
-* Using the batch engine for better efficieny
+* Using the batch engine for better efficiency
 
 ```
 SET execution.type=batch;
@@ -185,7 +187,7 @@ GROUP BY
   CEIL(o_ordertime TO MINUTE);
 ```
 
-* Run the same in streaming
+* Run the same query as a continuous streaming query
 
 ```
 SET execution.type=streaming;
@@ -195,13 +197,6 @@ SET execution.type=streaming;
 
 ```
 SET execution.result-mode=changelog;
-```
-
-* Reset to previous settings
-
-```
-SET execution.result-mode=table;
-SET execution.type=batch;
 ```
 
 * We can streamify the query a bit with a TUMBLE window
@@ -218,11 +213,17 @@ GROUP BY
   TUMBLE(o_ordertime, INTERVAL '1' MINUTE);
 ```
 
-* Query is still executed with the batch engine
+* We can execute this query also with the batch engine
+* Reset to previous settings
+
+```
+SET execution.result-mode=table;
+SET execution.type=batch;
+```
 
 ### Move query to streaming data
 
-* We can run the same query on the dynamic table
+* We can run the same query on the table backed by a Kafka topic
 
 ```
 SET execution.type=streaming;
@@ -252,6 +253,10 @@ GROUP BY
 
 ```
 SET execution.type=batch;
+```
+
+```
+USE CATALOG hive;
 ```
 
 * show customers and their orders by region and priority for a specific day
@@ -285,12 +290,16 @@ SET execution.type=streaming;
 ```
 
 ```
+USE CATALOG default_catalog;
+```
+
+```
 SELECT
   r_name AS `region`,
   o_orderpriority AS `priority`,
   COUNT(DISTINCT c_custkey) AS `number_of_customers`,
   COUNT(o_orderkey) AS `number_of_orders`
-FROM default_catalog.default_database.prod_orders
+FROM prod_orders
 JOIN prod_customer ON o_custkey = c_custkey
 JOIN prod_nation ON c_nationkey = n_nationkey
 JOIN prod_region ON n_regionkey = r_regionkey
@@ -309,7 +318,6 @@ GROUP BY r_name, o_orderpriority;
 
 * A common requirement is to join events of two (or more) dynamic tables that are related with each other in a temporal context, for example events that happened around the same time.
 * Flink SQL features special optimizations for such joins.
-
 * First switch to the default catalog (which contains all dynamic tables)
 
 ```
@@ -345,6 +353,10 @@ WHERE
 * Example query: enrich `prod_lineitem` table with current exchange rate from `prod_rates` table to compute EUR-normalize amounts.
 
 ```
+USE CATALOG default_catalog;
+```
+
+```
 SELECT
   l_proctime AS `querytime`,
   l_orderkey AS `order`,
@@ -373,9 +385,12 @@ UPDATE PROD_RATES SET RS_TIMESTAMP = '2020-04-01 01:00:00.000', RS_RATE = 1.234 
 ### Enrichment Join against Temporal Table
 
 * Same use case as before. 
-
 * Instead of looking up rates from MySQL, we ingest updates from another Kafka table.
 * Kafka table is accessed via a TemporalTableFunction `prod_rates_temporal` which looks up the most-recent exchange rate for a currency.
+
+```
+USE CATALOG default_catalog;
+```
 
 ```
 SELECT
@@ -399,13 +414,17 @@ WHERE rs_symbol = l_currency AND
 ## Matching Patterns on Dynamic Tables 
 
 * Matching patterns on new data with low latency is a common use case for stream processing
-* SQL:2016 introduced the MATCH RECOGNIZE clause to match patterns on tables
-* The combination of MATCH RECOGNIZE and dynamic tables is very powerful
-* Flink supports MATCH RECOGNIZE since several releases
+* SQL:2016 introduced the `MATCH_RECOGNIZE` clause to match patterns on tables
+* The combination of `MATCH_RECOGNIZE` and dynamic tables is very powerful
+* Flink supports `MATCH_RECOGNIZE` since several releases
 
 * Find customers that have changed their delivery behavior.
   * Search for a pattern where the last x lineitems had regular shippings
   * But now the customer whats to pay on delivery (collect on delivery = CoD)
+
+```
+USE CATALOG default_catalog;
+```
 
 ```
 CREATE VIEW lineitem_with_customer AS
@@ -580,4 +599,3 @@ GROUP BY
 
 * Monitor query result in Grafana: [http://localhost:3000](http://localhost:3000)
 * Go to dashboard region stats and set refresh rate to 1s
-
