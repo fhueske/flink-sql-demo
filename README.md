@@ -597,5 +597,21 @@ GROUP BY
   HOUR(o_ordertime);
 ```
 
-* Monitor query result in Grafana: [http://localhost:3000](http://localhost:3000)
-* Go to dashboard region stats and set refresh rate to 1s
+#### Monitoring Results with Grafana
+
+* Open Grafana: [http://localhost:3000](http://localhost:3000)
+* Go to dashboard "Region Stats" and set refresh rate to 1s (top right corner) to see how the query updates the result table.
+
+#### Monitoring Results with MySQL CLI
+
+* Start MySQL CLI
+
+```
+docker-compose exec mysql mysql -Dsql-demo -usql-demo -pdemo-sql
+```
+
+* Repeatedly run the following query to see how the query updates the result table.
+
+```
+SELECT * FROM REGION_STATS ORDER BY hour_of_day, region;
+```
