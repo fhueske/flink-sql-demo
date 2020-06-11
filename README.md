@@ -290,7 +290,7 @@ SET execution.type=streaming;
 ```
 
 ```
-USE CATALOG default_catalog;
+USE CATALOG hive;
 ```
 
 ```
@@ -299,7 +299,7 @@ SELECT
   o_orderpriority AS `priority`,
   COUNT(DISTINCT c_custkey) AS `number_of_customers`,
   COUNT(o_orderkey) AS `number_of_orders`
-FROM prod_orders
+FROM default_catalog.default_database.prod_orders
 JOIN prod_customer ON o_custkey = c_custkey
 JOIN prod_nation ON c_nationkey = n_nationkey
 JOIN prod_region ON n_regionkey = r_regionkey
