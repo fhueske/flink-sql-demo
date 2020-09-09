@@ -63,6 +63,8 @@ services:
       - "9083"
     ports:
       - "9083:9083"
+    volumes:
+      - /tmp/warehouse:/tmp/warehouse
   minio:
     image: minio/minio:latest
     entrypoint: sh

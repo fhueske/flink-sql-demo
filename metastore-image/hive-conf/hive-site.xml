@@ -30,7 +30,7 @@
 
   <property>
     <name>hive.metastore.warehouse.dir</name>
-    <value>/user/hive/warehouse</value>
+    <value>/tmp/warehouse</value>
     <description>location of default database for the warehouse</description>
   </property>
 
