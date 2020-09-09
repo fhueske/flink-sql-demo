@@ -18,11 +18,13 @@
 
 FROM openjdk:8-jre
 
+RUN cd /opt && \
+    wget https://archive.apache.org/dist/hive/hive-3.1.2/apache-hive-3.1.2-bin.tar.gz
+
 # Copy binary distributions from Apache servers/mirrors
 RUN cd /opt && \
     wget https://archive.apache.org/dist/hadoop/common/hadoop-2.9.2/hadoop-2.9.2.tar.gz && \
-    wget http://archive.apache.org/dist/db/derby/db-derby-10.10.2.0/db-derby-10.10.2.0-bin.tar.gz && \
-    wget https://archive.apache.org/dist/hive/hive-2.3.6/apache-hive-2.3.6-bin.tar.gz
+    wget http://archive.apache.org/dist/db/derby/db-derby-10.10.2.0/db-derby-10.10.2.0-bin.tar.gz
 
 # Install Hadoop
 RUN cd /opt && \
@@ -33,12 +35,12 @@ RUN cd /opt && \
     rm db-derby-10.10.2.0-bin.tar.gz && \
     mkdir db-derby-10.10.2.0-bin/data && \
 # Install Hive
-    tar xfz apache-hive-2.3.6-bin.tar.gz && \
-    rm apache-hive-2.3.6-bin.tar.gz && \
-    cp /opt/db-derby-10.10.2.0-bin/lib/derbyclient.jar /opt/apache-hive-2.3.6-bin/lib && \
-    cp /opt/db-derby-10.10.2.0-bin/lib/derbytools.jar /opt/apache-hive-2.3.6-bin/lib 
+    tar xfz apache-hive-3.1.2-bin.tar.gz && \
+    rm apache-hive-3.1.2-bin.tar.gz && \
+    cp /opt/db-derby-10.10.2.0-bin/lib/derbyclient.jar /opt/apache-hive-3.1.2-bin/lib && \
+    cp /opt/db-derby-10.10.2.0-bin/lib/derbytools.jar /opt/apache-hive-3.1.2-bin/lib 
 
-COPY hive-conf/hive-site.xml /opt/apache-hive-2.3.6-bin/conf
+COPY hive-conf/hive-site.xml /opt/apache-hive-3.1.2-bin/conf
 
 
 ENV HADOOP_HOME /opt/hadoop-2.9.2
