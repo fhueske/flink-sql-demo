@@ -28,10 +28,37 @@
     <description>Driver class name for a JDBC metastore</description>
   </property>
 
+<!--
   <property>
     <name>hive.metastore.warehouse.dir</name>
     <value>/tmp/warehouse</value>
     <description>location of default database for the warehouse</description>
+  </property>
+-->
+
+  <property>
+    <name>hive.metastore.warehouse.dir</name>
+    <value>s3a://sql-demo/warehouse</value>
+  </property>
+
+  <property>
+    <name>fs.s3a.endpoint</name>
+    <value>http://minio:9000</value>
+  </property> 
+
+  <property>
+    <name>fs.s3a.path.style.access</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <name>fs.s3a.access.key</name>
+    <value>sql-demo</value>
+  </property>
+
+  <property>
+    <name>fs.s3a.secret.key</name>
+    <value>demo-sql</value>
   </property>
 
   <property>

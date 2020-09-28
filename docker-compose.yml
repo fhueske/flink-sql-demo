@@ -59,6 +59,8 @@ services:
   metastore:
     image: fhueske/hive-metastore:2.3.6
     build: ./metastore-image
+    depends_on:
+      - minio
     expose:
       - "9083"
     ports:

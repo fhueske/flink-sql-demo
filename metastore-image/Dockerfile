@@ -40,12 +40,18 @@ RUN cd /opt && \
     cp /opt/db-derby-10.10.2.0-bin/lib/derbyclient.jar /opt/apache-hive-3.1.2-bin/lib && \
     cp /opt/db-derby-10.10.2.0-bin/lib/derbytools.jar /opt/apache-hive-3.1.2-bin/lib 
 
+# install Hadoop S3
+RUN cd /opt/apache-hive-3.1.2-bin/lib && \
+    wget https://repo.maven.apache.org/maven2/org/apache/hadoop/hadoop-aws/2.9.2/hadoop-aws-2.9.2.jar && \
+    wget https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.11.119/aws-java-sdk-bundle-1.11.119.jar
+
 COPY hive-conf/hive-site.xml /opt/apache-hive-3.1.2-bin/conf
 
 
 ENV HADOOP_HOME /opt/hadoop-2.9.2
 ENV DERBY_INSTALL /opt/db-derby-10.10.2.0-bin
 ENV DERBY_HOME /opt/db-derby-10.10.2.0-bin
+ENV HADOOP_OPTIONAL_TOOLS hadoop-aws
 
 COPY docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
